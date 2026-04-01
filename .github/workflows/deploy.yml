@@ -69,6 +69,37 @@ jobs:
             dist/ \
             root@${{ env.PROD_HOST }}:/var/www/pay/docs/
 
+      - name: Ensure nginx docs location
+        run: |
+          ssh -i ~/.ssh/deploy_key root@${{ env.PROD_HOST }} '
+            CONF="/etc/nginx/sites-available/pay-production.conf"
+            if [ -f "$CONF" ] && ! grep -q "/var/www/pay/docs/" "$CONF"; then
+              # Insert /docs/ location block before the landing page block
+              sed -i "/# Landing page/i\\
+              # Docs (VitePress) - redirect bare path to trailing slash\\
+              location = /docs {\\
+                  return 301 /docs/;\\
+              }\\
+              \\
+              location /docs/ {\\
+                  alias /var/www/pay/docs/;\\
+                  try_files \\\$uri \\\$uri/ /docs/index.html;\\
+              }\\
+              \\
+              # Docs static assets - aggressive caching (VitePress hashes filenames)\\
+              location /docs/assets/ {\\
+                  alias /var/www/pay/docs/assets/;\\
+                  expires 1y;\\
+                  add_header Cache-Control \"public, immutable\";\\
+              }\\
+              " "$CONF"
+              nginx -t && systemctl reload nginx
+              echo "--- nginx updated with /docs/ block"
+            else
+              echo "--- nginx already has /docs/ block (or config not found)"
+            fi
+          '
+
       - name: Verify deployment
         run: |
           ssh -i ~/.ssh/deploy_key root@${{ env.PROD_HOST }} \
@@ -76,7 +107,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          sleep 2
+          sleep 3
           echo "Checking docs page loads..."
           curl -sf https://pay-skill.com/docs/ | grep -q '<title>' || { echo "FAIL: docs page not loading"; exit 1; }
           echo "--- smoke test passed"
