@@ -1,0 +1,82 @@
+name: Deploy Docs
+
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: false
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  PROD_HOST: 204.168.133.111
+
+jobs:
+  build:
+    name: Build docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build VitePress
+        run: npx vitepress build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-dist
+          path: .vitepress/dist/
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-dist
+          path: dist/
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CI_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ env.PROD_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy static files
+        run: |
+          ssh -i ~/.ssh/deploy_key root@${{ env.PROD_HOST }} \
+            "mkdir -p /var/www/pay/docs"
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            dist/ \
+            root@${{ env.PROD_HOST }}:/var/www/pay/docs/
+
+      - name: Verify deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key root@${{ env.PROD_HOST }} \
+            "ls /var/www/pay/docs/index.html && echo '--- docs deploy OK'"
+
+      - name: Smoke test
+        run: |
+          sleep 2
+          echo "Checking docs page loads..."
+          curl -sf https://pay-skill.com/docs/ | grep -q '<title>' || { echo "FAIL: docs page not loading"; exit 1; }
+          echo "--- smoke test passed"
