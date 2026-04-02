@@ -228,15 +228,107 @@ pay withdraw 0xRecipient 10.00
 
 ---
 
+### ows
+
+OWS (Open Wallet Standard) wallet management. Requires the `ows` CLI to be installed.
+
+#### ows init
+
+Create an OWS wallet with chain-lock policy and API key.
+
+```bash
+pay ows init
+pay ows init --name my-agent --chain base-sepolia
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--name <NAME>` | `pay-{hostname}` | Wallet name |
+| `--chain <CHAIN>` | `base` | Chain: `base` or `base-sepolia` |
+
+Creates a wallet in the OWS vault (`~/.ows/`), a chain-lock policy, and an API key. Outputs the API key (shown once) and MCP config.
+
+If OWS is not installed, attempts to install via `npm install -g @open-wallet-standard/core`.
+
+#### ows list
+
+List all OWS wallets.
+
+```bash
+pay ows list
+```
+
+#### ows fund
+
+Generate a fund link for an OWS wallet.
+
+```bash
+pay ows fund --wallet my-agent
+```
+
+| Flag | Description |
+|------|-------------|
+| `--wallet <NAME>` | Wallet name or ID (default: `OWS_WALLET_ID` env) |
+| `--amount <USDC>` | Pre-fill amount |
+
+#### ows set-policy
+
+Set spending policy on an OWS wallet.
+
+```bash
+pay ows set-policy --max-tx 500 --daily-limit 5000
+pay ows set-policy --chain base-sepolia
+```
+
+| Flag | Description |
+|------|-------------|
+| `--chain <CHAIN>` | Chain to lock to (default: `base`) |
+| `--max-tx <USDC>` | Per-transaction spending cap |
+| `--daily-limit <USDC>` | Daily spending cap |
+
+Without `--max-tx` or `--daily-limit`, creates a chain-lock-only policy.
+
+### key
+
+Plain private key management. For dev/testing only.
+
+#### key init
+
+Generate a raw secp256k1 private key.
+
+```bash
+pay key init
+pay key init --write-env
+```
+
+| Flag | Description |
+|------|-------------|
+| `--write-env` | Write `PAYSKILL_KEY` to `.env` file |
+
+Outputs the private key in hex. For production, use `pay init` instead.
+
+---
+
 ## Signer Modes
 
-The CLI supports three key management modes:
+Three signer initialization commands, in priority order:
 
-| Mode | How | When |
-|------|-----|------|
-| **OS Keychain** | Stored via platform keyring | Default (after `pay init`) |
-| **Encrypted file** | AES-256-GCM encrypted `.pay` file | Fallback if keychain unavailable |
-| **Environment variable** | `PAYSKILL_SIGNER_KEY=0x...` | CI/CD, testing |
+| Command | Mode | When |
+|---------|------|------|
+| `pay init` | **Pay signer (default)** — AES-256-GCM encrypted key, OS keychain | Production agents |
+| `pay ows init` | **OWS** — Open Wallet Standard vault, policy-gated signing | Agents using OWS ecosystem |
+| `pay key init` | **Plain key** — raw private key, no encryption | Dev/testing only |
+
+The Pay signer is always priority #1. OWS only activates when the `ows` CLI is installed and `OWS_WALLET_ID` is set. Plain key is for development only.
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `PAYSKILL_SIGNER_KEY` | Unlock Pay's encrypted signer |
+| `OWS_WALLET_ID` | OWS wallet name for SDK auto-detection |
+| `OWS_API_KEY` | OWS API key for policy-gated signing |
+| `PAYSKILL_KEY` | Raw private key (dev/testing only) |
 
 ---
 
