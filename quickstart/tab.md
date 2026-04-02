@@ -109,7 +109,29 @@ pay tab topup abc123 10.00
 
 :::
 
-## 4. Close the Tab
+## 4. Withdraw Charged Funds
+
+The provider can withdraw accumulated charges at any time while the tab stays open. The same 1% fee applies (identical to `closeTab`). The tab remains active for more charges after withdrawal.
+
+::: code-group
+
+```typescript [TypeScript]
+const result = await provider.withdrawTab("abc123");
+console.log(`Withdrawn: $${result.amount / 1_000_000}`);
+```
+
+```python [Python]
+result = provider.withdraw_tab("abc123")
+print(f"Withdrawn: ${result.amount / 1_000_000}")
+```
+
+```bash [CLI]
+pay tab withdraw abc123
+```
+
+:::
+
+## 5. Close the Tab
 
 Either party can close unilaterally:
 

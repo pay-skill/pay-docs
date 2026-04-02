@@ -96,6 +96,15 @@ const charge = await providerWallet.chargeTab(tabId, 1); // Charge $1.00
 // => { status: "approved" }
 ```
 
+#### Withdraw from a Tab (Provider-Side)
+
+```typescript
+const result = await providerWallet.withdrawTab(tabId);
+// => { amount: 2000000, status: "open" }
+```
+
+Withdraw all accumulated charges from a tab (provider-only). The 1% fee is deducted. The tab stays open for more charges. Returns the updated Tab.
+
 #### Close a Tab
 
 ```typescript
@@ -182,6 +191,7 @@ const tab = await client.openTab("0xProvider", 20_000_000, { maxChargePerCall: 2
 await client.topUpTab(tab.tabId, 10_000_000);
 const tabs = await client.listTabs();
 const single = await client.getTab(tab.tabId);
+await client.withdrawTab(tab.tabId);
 await client.closeTab(tab.tabId);
 ```
 
