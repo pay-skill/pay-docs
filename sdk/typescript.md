@@ -69,7 +69,7 @@ const result = await wallet.payDirect(
 ```
 
 - **Minimum:** $1.00
-- **Fee:** 1% deducted from provider payout
+- **Fee:** 1% deducted from provider payout (0.75% for providers above $50k/month volume)
 - **Permit:** Auto-signed (EIP-2612 approval to PayDirect contract)
 
 ### Tab Management
@@ -103,7 +103,7 @@ const result = await providerWallet.withdrawTab(tabId);
 // => { amount: 2000000, status: "open" }
 ```
 
-Withdraw all accumulated charges from a tab (provider-only). The 1% fee is deducted. The tab stays open for more charges. Returns the updated Tab.
+Withdraw all accumulated charges from a tab (provider-only). The 1% processing fee is deducted (0.75% for high-volume providers). The tab stays open for more charges. Returns the updated Tab.
 
 #### Close a Tab
 
@@ -113,9 +113,11 @@ const close = await wallet.closeTab(tabId);
 ```
 
 Either agent or provider can close unilaterally. On close:
-- `totalCharged * 0.99` goes to provider
-- `totalCharged * 0.01` goes to fee wallet
+- `totalCharged × 0.99` goes to provider (×0.9925 for high-volume)
+- `totalCharged × 0.01` goes to fee wallet (×0.0075 for high-volume)
 - Remainder returns to agent
+
+See the [Tab Quickstart](/quickstart/tab#fees) for the full fee breakdown.
 
 ### x402 Payments
 

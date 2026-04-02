@@ -56,6 +56,39 @@ pay tab open 0xProviderAddress 20.00 --max-charge 2.00
 
 The activation fee (`max($0.10, 1% of $20) = $0.20`) is deducted immediately.
 
+## Fees
+
+Tabs have two fee components:
+
+| Fee | When | Formula | Discountable? |
+|-----|------|---------|---------------|
+| **Activation fee** | Paid at open | `max($0.10, 1% of tab amount)` | No |
+| **Processing fee** | Paid at close or withdraw | 1% of charged amount | Yes |
+
+The activation fee is non-refundable and covers on-chain gas for locking funds. It is deducted from the locked balance immediately.
+
+The processing fee is deducted from the provider payout when the tab is closed or when the provider withdraws charged funds. Providers above **$50k/month volume** pay a reduced rate of **0.75%**.
+
+### Effective total cost
+
+| Tier | Activation | Processing | Total on fully-used tab |
+|------|-----------|------------|------------------------|
+| Standard | 1% | 1% | ~2% |
+| High-volume (>$50k/mo) | 1% | 0.75% | ~1.75% |
+| Direct payments | — | 1% (0.75% high-vol) | 1% (0.75%) |
+
+### Example: $100 tab, fully charged
+
+| Step | Amount |
+|------|--------|
+| Agent locks | $100.00 |
+| Activation fee → fee wallet | $1.00 |
+| Tab balance after activation | $99.00 |
+| Provider charges full $99.00 | — |
+| Processing fee (1%) → fee wallet | $0.99 |
+| Provider receives | $98.01 |
+| Agent refund | $0.00 |
+
 ## 2. Charge the Tab (Provider Side)
 
 The provider charges for work completed:
@@ -154,9 +187,11 @@ pay tab close abc123
 ## What Happened on Close
 
 With $2.00 total charged from a $20.00 tab:
-- **Provider receives:** `$2.00 * 0.99 = $1.98`
-- **Fee wallet receives:** `$2.00 * 0.01 = $0.02`
-- **Agent receives:** `$20.00 - $0.20 (activation) - $2.00 (charges) = $17.80`
+- **Provider receives:** `$2.00 × 0.99 = $1.98` (processing fee deducted)
+- **Fee wallet receives:** `$0.20 (activation) + $0.02 (processing) = $0.22`
+- **Agent receives:** `$20.00 − $0.20 (activation) − $2.00 (charges) = $17.80`
+
+See [Fees](#fees) for full breakdown including volume discounts.
 
 ## Next Steps
 

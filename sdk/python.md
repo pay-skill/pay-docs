@@ -69,7 +69,7 @@ result = client.pay_direct(
 ```
 
 - **Minimum:** 1,000,000 ($1.00)
-- **Fee:** 1% deducted from provider payout
+- **Fee:** 1% deducted from provider payout (0.75% for providers above $50k/month volume)
 - **Permit:** Auto-signed (EIP-2612 approval to PayDirect contract)
 
 ### Tab Management
@@ -101,7 +101,7 @@ result = client.withdraw_tab("abc123")
 # => Tab(tab_id="abc123", status="open")
 ```
 
-Withdraw all accumulated charges from a tab (provider-only). The 1% fee is deducted. The tab stays open for more charges. Returns the updated Tab.
+Withdraw all accumulated charges from a tab (provider-only). The 1% processing fee is deducted (0.75% for high-volume providers). The tab stays open for more charges. Returns the updated Tab.
 
 #### Close a Tab
 
@@ -111,9 +111,11 @@ tab = client.close_tab("abc123")
 ```
 
 Either agent or provider can close unilaterally. On close:
-- `total_charged * 0.99` goes to provider
-- `total_charged * 0.01` goes to fee wallet
+- `total_charged × 0.99` goes to provider (×0.9925 for high-volume)
+- `total_charged × 0.01` goes to fee wallet (×0.0075 for high-volume)
 - Remainder returns to agent
+
+See the [Tab Quickstart](/quickstart/tab#fees) for the full fee breakdown.
 
 #### List and Get Tabs
 
