@@ -40,7 +40,7 @@ const client = new PayClient({
   apiUrl: "https://testnet.pay-skill.com/api/v1",
   privateKey: process.env.PAYSKILL_KEY!,
   chainId: 84532,
-  routerAddress: "0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+  routerAddress: "0x24F26eCb1f46451994c59585817e87896749935D",
 });
 
 // One line — payment is automatic
@@ -57,7 +57,7 @@ client = PayClient(
     signer="raw",
     private_key="0xYOUR_KEY",
     chain_id=84532,
-    router_address="0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+    router_address="0x24F26eCb1f46451994c59585817e87896749935D",
 )
 
 # One line — payment is automatic

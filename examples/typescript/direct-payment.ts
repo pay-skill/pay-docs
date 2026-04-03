@@ -10,7 +10,7 @@
 import { Wallet } from "@pay-skill/sdk";
 
 const API_URL = "https://testnet.pay-skill.com/api/v1";
-const ROUTER = "0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F";
+const ROUTER = "0x24F26eCb1f46451994c59585817e87896749935D";
 
 async function main() {
   const key = process.env.PAYSKILL_KEY;

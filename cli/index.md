@@ -17,8 +17,14 @@ cargo install pay-cli
 ## Getting Started
 
 ```bash
-# Initialize wallet (generates keypair, stores encrypted key)
+# Initialize wallet (generates keypair, stores in OS keychain)
 pay init
+
+# Show current network
+pay network
+
+# Switch to testnet for development
+pay network testnet
 
 # Mint testnet USDC (testnet only)
 pay mint 100.00
@@ -26,30 +32,54 @@ pay mint 100.00
 # Check balance
 pay status
 
+# Show wallet address
+pay address
+
 # Send $5 to a provider
 pay direct 0xProvider... 5.00
 ```
 
-## Global Flags
+Fresh installs default to **Base mainnet**. Use `pay network testnet` to switch to Base Sepolia for development.
 
-| Flag | Env Var | Default | Description |
-|------|---------|---------|-------------|
-| `--json` | — | `false` | Output as JSON |
-| `--api-url <URL>` | `PAYSKILL_API_URL` | `https://pay-skill.com/api/v1` | API base URL |
-| `--chain-id <ID>` | `PAYSKILL_CHAIN_ID` | `8453` | Chain ID (8453=Base, 84532=Sepolia) |
-| `--router-address <ADDR>` | `PAYSKILL_ROUTER_ADDRESS` | — | PayRouter contract address |
+## Output
+
+Output is **JSON by default**. Use `--no-json` for human-readable format:
+
+```bash
+pay status
+# => {"wallet":"0x...","balance_usdc":"142.50","open_tabs":2,"total_locked":30000000,"network":"mainnet"}
+
+pay --no-json status
+# =>   Network: Base (mainnet)
+# =>   Balance: 142.50 USDC
+# =>   Open tabs: 2
+# =>   Locked: $30.00
+```
 
 ## Commands
 
+### network
+
+Show or switch between mainnet and testnet.
+
+```bash
+pay network                 # Show current network, chain ID, API URL, router
+pay network testnet         # Switch to Base Sepolia testnet
+pay network mainnet         # Switch to Base mainnet
+```
+
+Switching re-fetches the router contract address from the server automatically.
+
 ### init
 
-First-time wallet setup. Generates a secp256k1 keypair and stores it encrypted.
+First-time wallet setup. Generates a secp256k1 keypair and stores it in the OS keychain (falls back to AES-256-GCM encrypted file if keychain is unavailable).
 
 ```bash
 pay init
+pay init --no-keychain      # Force encrypted file storage
 ```
 
-If `PAYSKILL_SIGNER_KEY` is set, uses that key instead of generating a new one.
+During init, the CLI fetches contract addresses from the server's `/contracts` endpoint and writes them to `~/.pay/config.toml`.
 
 ### address
 
@@ -57,17 +87,15 @@ Show the wallet's Ethereum address.
 
 ```bash
 pay address
-# => 0x1234567890abcdef1234567890abcdef12345678
+# => {"address":"0x1234567890abcdef1234567890abcdef12345678"}
 ```
 
 ### status
 
-Display wallet balance and tab info.
+Display wallet balance, tab info, and current network.
 
 ```bash
 pay status
-# => Balance: $142.50 | Tabs: 2 open | Locked: $30.00
-
 pay status --wallet 0xOtherAddress
 ```
 
@@ -137,7 +165,7 @@ Withdraw earned charges from an open tab (provider-only).
 pay tab withdraw <TAB_ID>
 ```
 
-The 1% fee is deducted from the withdrawal. The tab stays open for more charges.
+The 1% fee is deducted from the withdrawal. The tab stays open for more charges. Minimum withdrawal: $1.00 -- charges below $1.00 accumulate until the threshold is reached; at `closeTab`, all remaining charges are paid out regardless of amount.
 
 #### tab close
 
@@ -155,7 +183,6 @@ List all tabs.
 
 ```bash
 pay tab list
-# => Tab abc123 | Provider: 0x... | Balance: $15.00 | Status: open
 ```
 
 ### request
@@ -177,14 +204,16 @@ Manage webhook registrations.
 #### webhook register
 
 ```bash
-pay webhook register https://example.com/hooks
-pay webhook register https://example.com/hooks --events "payment.completed,tab.charged" --secret "my-secret"
+pay webhook register https://example.com/hooks --events payment.completed,tab.charged
+pay webhook register https://example.com/hooks --events all --secret "my-secret"
 ```
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--events <LIST>` | All events | Comma-separated event filter |
-| `--secret <SECRET>` | `whsec_default` | HMAC signing secret |
+| Flag | Description |
+|------|-------------|
+| `--events <LIST>` | **Required.** Comma-separated event filter, or `all` |
+| `--secret <SECRET>` | HMAC signing secret (auto-generated if omitted) |
+
+Available events: `tab.opened`, `tab.charged`, `tab.low_balance`, `tab.closing_soon`, `tab.closed`, `tab.topped_up`, `payment.completed`, `x402.settled`
 
 #### webhook list
 
@@ -224,7 +253,6 @@ Open funding page to add USDC.
 
 ```bash
 pay fund
-# => https://pay-skill.com/fund?token=abc123
 ```
 
 ### withdraw
@@ -233,7 +261,6 @@ Withdraw USDC to an external address.
 
 ```bash
 pay withdraw 0xRecipient 10.00
-# => https://pay-skill.com/withdraw?token=abc123
 ```
 
 ---
@@ -298,6 +325,38 @@ pay ows set-policy --chain base-sepolia
 
 Without `--max-tx` or `--daily-limit`, creates a chain-lock-only policy.
 
+### signer
+
+Advanced wallet management.
+
+#### signer init
+
+Create a named wallet.
+
+```bash
+pay signer init                    # Default wallet
+pay signer init --name trading     # Named wallet
+pay signer init --no-keychain      # Force encrypted file
+```
+
+#### signer import
+
+Import an existing private key.
+
+```bash
+pay signer import --key 0xYOUR_KEY
+pay signer import --key 0xYOUR_KEY --name secondary
+```
+
+#### signer export
+
+Export a private key (interactive confirmation required).
+
+```bash
+pay signer export
+pay signer export --name trading
+```
+
 ### key
 
 Plain private key management. For dev/testing only.
@@ -325,7 +384,7 @@ Three signer initialization commands, in priority order:
 
 | Command | Mode | When |
 |---------|------|------|
-| `pay init` | **Pay signer (default)** — AES-256-GCM encrypted key, OS keychain | Production agents |
+| `pay init` | **Pay signer (default)** — OS keychain, AES-256-GCM encrypted fallback | Production agents |
 | `pay ows init` | **OWS** — Open Wallet Standard vault, policy-gated signing | Agents using OWS ecosystem |
 | `pay key init` | **Plain key** — raw private key, no encryption | Dev/testing only |
 
@@ -342,6 +401,18 @@ The Pay signer is always priority #1. OWS only activates when the `ows` CLI is i
 
 ---
 
+## Configuration
+
+Config file: `~/.pay/config.toml` (created by `pay init`, updated by `pay network`)
+
+```toml
+chain_id = 8453
+router_address = "0x..."
+api_url = "https://pay-skill.com/api/v1"
+```
+
+---
+
 ## Exit Codes
 
 | Code | Meaning |
@@ -349,17 +420,3 @@ The Pay signer is always priority #1. OWS only activates when the `ows` CLI is i
 | 0 | Success |
 | 1 | User error (invalid input, missing init) |
 | 2 | System error (network failure, server error) |
-
----
-
-## JSON Output
-
-Pass `--json` for machine-readable output:
-
-```bash
-pay --json status
-# => {"wallet":"0x...","balance_usdc":"142500000","open_tabs":2,"total_locked":30000000}
-
-pay --json direct 0xProvider 5.00
-# => {"tx_hash":"0xabc...","status":"confirmed"}
-```

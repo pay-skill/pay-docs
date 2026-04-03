@@ -53,7 +53,7 @@ const wallet = new Wallet({
   privateKey: process.env.PAYSKILL_KEY!,
   chain: "base-sepolia",
   apiUrl: "https://testnet.pay-skill.com/api/v1",
-  routerAddress: "0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+  routerAddress: "0x24F26eCb1f46451994c59585817e87896749935D",
 });
 
 const result = await wallet.payDirect(
@@ -72,7 +72,7 @@ client = PayClient(
     signer="raw",
     private_key="0xYOUR_KEY",
     chain_id=84532,
-    router_address="0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+    router_address="0x24F26eCb1f46451994c59585817e87896749935D",
 )
 
 result = client.pay_direct(

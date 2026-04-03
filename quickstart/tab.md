@@ -18,7 +18,7 @@ const agent = new Wallet({
   privateKey: process.env.AGENT_KEY!,
   chain: "base-sepolia",
   apiUrl: "https://testnet.pay-skill.com/api/v1",
-  routerAddress: "0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+  routerAddress: "0x24F26eCb1f46451994c59585817e87896749935D",
 });
 
 const tab = await agent.openTab(
@@ -36,7 +36,7 @@ agent = PayClient(
     api_url="https://testnet.pay-skill.com/api/v1",
     signer="raw", private_key="0xAGENT_KEY",
     chain_id=84532,
-    router_address="0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+    router_address="0x24F26eCb1f46451994c59585817e87896749935D",
 )
 
 tab = agent.open_tab(
@@ -67,7 +67,7 @@ Tabs have two fee components:
 
 The activation fee is non-refundable and covers on-chain gas for locking funds. It is deducted from the locked balance immediately.
 
-The processing fee is deducted from the provider payout when the tab is closed or when the provider withdraws charged funds. Providers above **$50k/month volume** pay a reduced rate of **0.75%**.
+The processing fee is deducted from the provider payout when the tab is closed or when the provider withdraws charged funds. Providers above **$50k/month volume** pay a reduced rate of **0.75%**. Minimum withdrawal is $1.00 -- charges below $1.00 accumulate until the threshold is reached, and at `closeTab` all remaining charges are paid out regardless of amount.
 
 ### Effective total cost
 
@@ -100,7 +100,7 @@ const provider = new Wallet({
   privateKey: process.env.PROVIDER_KEY!,
   chain: "base-sepolia",
   apiUrl: "https://testnet.pay-skill.com/api/v1",
-  routerAddress: "0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+  routerAddress: "0x24F26eCb1f46451994c59585817e87896749935D",
 });
 
 await provider.chargeTab("abc123", 1);  // charge $1.00
@@ -112,7 +112,7 @@ provider = PayClient(
     api_url="https://testnet.pay-skill.com/api/v1",
     signer="raw", private_key="0xPROVIDER_KEY",
     chain_id=84532,
-    router_address="0xE0Aa45e6937F3b9Fc0BEe457361885Cb9bfC067F",
+    router_address="0x24F26eCb1f46451994c59585817e87896749935D",
 )
 
 provider._post("/tabs/abc123/charge", {"amount": 1_000_000})  # $1.00
@@ -144,7 +144,7 @@ pay tab topup abc123 10.00
 
 ## 4. Withdraw Charged Funds
 
-The provider can withdraw accumulated charges at any time while the tab stays open. The same 1% fee applies (identical to `closeTab`). The tab remains active for more charges after withdrawal.
+The provider can withdraw accumulated charges at any time while the tab stays open. The same 1% fee applies (identical to `closeTab`). The tab remains active for more charges after withdrawal. Minimum withdrawal: $1.00 -- charges below $1.00 accumulate until the threshold is reached. At `closeTab`, all remaining charges are paid out regardless of amount.
 
 ::: code-group
 
