@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  PROD_HOST: 204.168.133.111
+  PROD_HOST: 204.168.136.156
 
 jobs:
   build:
@@ -56,7 +56,7 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.CI_SSH_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ env.PROD_HOST }} >> ~/.ssh/known_hosts
 
