@@ -21,6 +21,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: "Getting Started", link: "/" },
+      { text: "pay-gate", link: "/gate/" },
       { text: "TypeScript SDK", link: "/sdk/typescript" },
       { text: "Python SDK", link: "/sdk/python" },
       { text: "CLI", link: "/cli/" },
@@ -33,6 +34,7 @@ export default defineConfig({
           },
           { text: "SDK", link: "https://github.com/remit-md/pay-sdk" },
           { text: "CLI", link: "https://github.com/remit-md/pay-cli" },
+          { text: "Gate", link: "https://github.com/remit-md/gate" },
         ],
       },
     ],
@@ -52,6 +54,14 @@ export default defineConfig({
       {
         text: "CLI Reference",
         items: [{ text: "Commands", link: "/cli/" }],
+      },
+      {
+        text: "pay-gate",
+        items: [
+          { text: "Overview", link: "/gate/" },
+          { text: "Quick Start", link: "/gate/quickstart" },
+          { text: "Configuration", link: "/gate/config" },
+        ],
       },
       {
         text: "Guides",

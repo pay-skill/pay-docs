@@ -174,67 +174,68 @@ On close: you receive `totalCharged * 0.99`, the 1% fee goes to the fee wallet, 
 
 Turn any HTTP API into a paid endpoint. Agents pay automatically — their SDK handles the 402 flow.
 
-### 1. Return 402 for Unpaid Requests
+### Option A: Use pay-gate (recommended)
+
+[pay-gate](/gate/) is a drop-in reverse proxy that handles x402 for you. No code changes to your backend.
+
+```bash
+npm create pay-gate my-api-gate
+# Set your provider address, origin URL, route pricing
+npx wrangler deploy
+```
+
+See the [pay-gate Quick Start](/gate/quickstart) for full setup.
+
+### Option B: Implement x402 Directly
+
+If you want full control, implement the x402 V2 protocol in your backend.
+
+#### 1. Return 402 with PAYMENT-REQUIRED header
 
 ```javascript
 // Express example
 app.get("/api/premium-data", (req, res) => {
-  // Check for payment proof
-  const txHash = req.headers["x-payment-tx"];
-  const tabId = req.headers["x-payment-tab"];
+  const paymentSig = req.headers["payment-signature"];
 
-  if (txHash || tabId) {
-    // Payment verified — serve content
+  if (paymentSig) {
+    // Verify with facilitator, then serve content
     return res.json({ data: "premium content" });
   }
 
-  // No payment — return 402 with requirements
-  res.status(402).json({
+  // No payment — return 402 with x402 V2 requirements
+  const requirements = {
     scheme: "exact",
-    amount: 1_000_000,                  // $1.00 per call
+    amount: "1000000",                   // $1.00 in micro-USDC
     to: "0xYourProviderWallet",
-    settlement: "direct",               // or "tab" for micropayments
+    settlement: "direct",                // or "tab" for micropayments
+    facilitator: "https://pay-skill.com/x402",
+    network: "base",
+  };
+
+  const encoded = Buffer.from(JSON.stringify(requirements)).toString("base64");
+  res.set("PAYMENT-REQUIRED", encoded);
+  res.status(402).json({
+    error: "payment_required",
+    message: "This endpoint requires payment. $1.00 per request.",
   });
 });
 ```
 
-### 2. Choose Settlement Mode
+#### 2. Choose Settlement Mode
 
-| Field | `"direct"` | `"tab"` |
+| Price | `"direct"` | `"tab"` |
 |-------|-----------|---------|
-| **Per-call cost** | $1.00 minimum | No minimum |
-| **Best for** | Expensive single calls | Cheap repeated calls |
-| **Agent experience** | Pays per request | Opens tab once, charges per request |
+| **Best for** | > $1/call | < $1/call (micropayments) |
+| **Agent experience** | Pays per request on-chain | Opens tab once, charges per call |
+| **Latency** | ~2s (chain confirmation) | ~50ms (off-chain verify) |
 
-For micropayments (< $1/call), use `"tab"`. The agent's SDK auto-opens a tab and charges it.
+#### 3. x402 V2 Headers
 
-### 3. That's It
-
-No SDK installation needed on the provider side. Just return 402 with the right JSON, and any Pay-enabled agent can pay automatically.
-
-### Python Provider Example
-
-```python
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-PROVIDER_WALLET = "0xYourWallet"
-
-@app.get("/api/data")
-def get_data():
-    tx = request.headers.get("X-Payment-Tx", "")
-    tab = request.headers.get("X-Payment-Tab", "")
-
-    if tx or tab:
-        return jsonify({"data": "premium content"})
-
-    return jsonify({
-        "scheme": "exact",
-        "amount": 1_000_000,
-        "to": PROVIDER_WALLET,
-        "settlement": "direct",
-    }), 402
-```
+| Header | Direction | Purpose |
+|--------|-----------|---------|
+| `PAYMENT-REQUIRED` | Server -> Agent | Base64 JSON requirements (in 402) |
+| `PAYMENT-SIGNATURE` | Agent -> Server | Payment proof (in retry) |
+| `PAYMENT-RESPONSE` | Server -> Agent | Settlement receipt (in response) |
 
 ---
 
