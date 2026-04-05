@@ -63,18 +63,18 @@ Tabs have two fee components:
 | Fee | When | Formula | Discountable? |
 |-----|------|---------|---------------|
 | **Activation fee** | Paid at open | `max($0.50, 1% of tab amount)` | No |
-| **Processing fee** | Paid at close or withdraw | `max($0.002, 1%)` per charge | Yes |
+| **Processing fee** | Paid at close or withdraw | `max($0.002, 1%)` per charge | Yes (rate portion only) |
 
 The activation fee is non-refundable and covers on-chain gas for the tab lifecycle. It is deducted from the locked balance immediately. The $0.002 per-charge floor applies below $0.20/charge; above $0.20 the standard 1% rate applies.
 
-The processing fee is deducted from the provider payout when the tab is closed or when the provider withdraws charged funds. Providers above **$50k/month volume** pay a reduced rate of **0.75%**. Minimum withdrawal is $1.00 -- charges below $1.00 accumulate until the threshold is reached, and at `closeTab` all remaining charges are paid out regardless of amount.
+The processing fee is deducted from the provider payout when the tab is closed or when the provider withdraws charged funds. Providers above **$50k/month volume** pay a reduced rate: `max($0.002, 0.75%)`. The $0.002 floor always applies regardless of volume tier. Minimum withdrawal is $1.00 -- charges below $1.00 accumulate until the threshold is reached, and at `closeTab` all remaining charges are paid out regardless of amount.
 
 ### Effective total cost
 
 | Tier | Activation | Processing | Total on fully-used tab |
 |------|-----------|------------|------------------------|
-| Standard | 1% | 1% | ~2% |
-| High-volume (>$50k/mo) | 1% | 0.75% | ~1.75% |
+| Standard | 1% | `max($0.002, 1%)` | ~2% |
+| High-volume (>$50k/mo) | 1% | `max($0.002, 0.75%)` | ~1.75% |
 | Direct payments | — | 1% (0.75% high-vol) | 1% (0.75%) |
 
 ### Example: $100 tab, fully charged
