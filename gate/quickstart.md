@@ -122,31 +122,44 @@ pay-gate start --sidecar
 # Listens on 127.0.0.1:8402
 ```
 
-### nginx
+### nginx (requires njs module)
+
+nginx's built-in `auth_request` module cannot forward 402 status codes or custom headers — it only recognizes 2xx/401/403. Use the njs module instead, which ships with standard nginx packages.
 
 ```nginx
-location /api/ {
-    auth_request /__pay_check;
-    auth_request_set $pay_verified $upstream_http_x_pay_verified;
-    auth_request_set $pay_from     $upstream_http_x_pay_from;
+load_module modules/ngx_http_js_module.so;
 
-    proxy_set_header X-Pay-Verified $pay_verified;
-    proxy_set_header X-Pay-From     $pay_from;
-    proxy_pass http://localhost:8080;
+http {
+    js_path /etc/nginx/njs/;
+    js_import gate from gate.js;
 
-    error_page 402 = @payment_required;
-}
+    server {
+        # Paid routes — gated through pay-gate via njs
+        location /api/ {
+            js_content gate.handle;
+        }
 
-location = /__pay_check {
-    internal;
-    proxy_pass http://127.0.0.1:8402/__pay/check;
-    proxy_set_header X-Original-URI    $request_uri;
-    proxy_set_header X-Original-Method $request_method;
-    proxy_set_header PAYMENT-SIGNATURE $http_payment_signature;
-    proxy_pass_request_body off;
-    proxy_set_header Content-Length "";
+        # Internal: pay-gate sidecar subrequest
+        location = /__pay_check {
+            internal;
+            proxy_pass http://127.0.0.1:8402/__pay/check;
+            proxy_set_header X-Original-URI    $request_uri;
+            proxy_set_header X-Original-Method $request_method;
+            proxy_set_header PAYMENT-SIGNATURE $http_payment_signature;
+            proxy_pass_request_body off;
+            proxy_set_header Content-Length "";
+        }
+
+        # Internal: proxy to origin backend
+        location = /__origin {
+            internal;
+            proxy_pass http://localhost:8080;
+        }
+    }
 }
 ```
+
+See `examples/gate.js` for the njs handler that forwards 402 responses with x402 headers to the client.
 
 ### Traefik
 
