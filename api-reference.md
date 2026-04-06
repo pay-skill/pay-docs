@@ -210,8 +210,8 @@ Open a new tab (pre-funded spending account).
 ```json
 {
   "tab_id": "tab_abc123",
-  "activation_fee": 500000,
-  "balance": 4500000,
+  "activation_fee": 100000,
+  "balance": 4900000,
   "tx_hash": "0x...",
   "status": "active"
 }

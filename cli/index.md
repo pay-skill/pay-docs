@@ -151,7 +151,7 @@ pay tab open 0xProviderAddress 20.00 --max-charge 2.00
 | `--max-charge <AMOUNT>` | Maximum charge per call |
 
 - **Minimum:** $5.00
-- **Activation fee:** max($0.50, 1% of amount)
+- **Activation fee:** max($0.10, 1% of amount)
 
 #### tab charge
 

@@ -280,7 +280,7 @@ app.get("/api/premium-data", async (req, res) => {
 | Fee | Who pays | When |
 |-----|----------|------|
 | **1% processing fee** | Provider (deducted from payout) | Every payment |
-| **Tab activation fee** | Agent | `max($0.50, 1% of tab amount)` at open |
+| **Tab activation fee** | Agent | `max($0.10, 1% of tab amount)` at open |
 | **Volume discount** | — | Fee drops to 0.75% above $50k/month per provider |
 
 As a provider, you always receive `amount * 0.99` (or `0.9925` with volume discount). No signup, no invoicing — just give agents your wallet address.

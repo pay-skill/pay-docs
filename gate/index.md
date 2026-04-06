@@ -78,5 +78,5 @@ pay-gate itself is free. Standard Pay fees apply to each payment:
 | Fee | Who pays | Amount |
 |-----|----------|--------|
 | Processing | Provider (deducted) | 1% (0.75% above $50k/month) |
-| Tab activation | Agent | `max($0.50, 1% of tab amount)` |
+| Tab activation | Agent | `max($0.10, 1% of tab amount)` |
 | Gas | Pay protocol | Included |

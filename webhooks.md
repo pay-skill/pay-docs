@@ -105,7 +105,7 @@ Every webhook delivery is a POST with a JSON body:
     "provider": "0xProviderAddress",
     "amount": 20000000,
     "max_charge_per_call": 2000000,
-    "activation_fee": 500000
+    "activation_fee": 200000
   }
 }
 ```

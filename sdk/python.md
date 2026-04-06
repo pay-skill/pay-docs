@@ -94,7 +94,7 @@ tab = client.open_tab(
 ```
 
 - **Minimum:** 5,000,000 ($5.00)
-- **Activation fee:** `max($0.50, 1% of amount)` — non-refundable
+- **Activation fee:** `max($0.10, 1% of amount)` — non-refundable
 
 #### Top Up a Tab
 

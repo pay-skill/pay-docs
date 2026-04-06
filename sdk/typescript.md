@@ -94,7 +94,7 @@ const tab = await wallet.openTab(
 ```
 
 - **Minimum:** $5.00
-- **Activation fee:** `max($0.50, 1% of amount)` — non-refundable
+- **Activation fee:** `max($0.10, 1% of amount)` — non-refundable
 - **Permit:** Auto-signed for PayTab contract
 
 #### Charge a Tab (Provider-Side)
