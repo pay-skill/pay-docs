@@ -1,13 +1,13 @@
 # Quickstart: x402 Tab Settlement
 
-Use tabs for repeated micropayments to an HTTP API. The SDK auto-opens a tab on the first 402 response, then charges it for subsequent requests — much cheaper per call than direct settlement.
+Use tabs for repeated micropayments to an HTTP API. The CLI or SDK auto-opens a tab on the first 402 response, then charges it for subsequent requests — much cheaper per call than direct settlement.
 
 ## How It Works
 
 1. Agent requests data from a provider
 2. Provider returns `402` with base64-encoded v2 requirements (`accepts[0].extra.settlement === "tab"`)
-3. SDK auto-opens a tab (10x the per-call price, min $5), charges it, retries with `PAYMENT-SIGNATURE`
-4. On subsequent 402s to the same provider, the SDK reuses the existing tab
+3. Client auto-opens a tab (10x the per-call price, min $5), charges it, retries with `PAYMENT-SIGNATURE`
+4. On subsequent 402s to the same provider, the client reuses the existing tab
 
 ## Provider Setup
 
@@ -22,9 +22,9 @@ app.get("/api/data", (req, res) => {
       resource: { url: `https://${req.hostname}${req.path}`, mimeType: "application/json" },
       accepts: [{
         scheme: "exact",
-        network: "eip155:8453",
+        network: "eip155:8453",              // mainnet; use /api/v1/contracts → chain_id
         amount: "100000",                   // $0.10 per call
-        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        asset: "0x...",                        // USDC address from /api/v1/contracts → usdc
         payTo: "0xYourProviderWallet",
         maxTimeoutSeconds: 60,
         extra: { name: "USDC", version: "2", facilitator: "https://pay-skill.com/x402", settlement: "tab" },
@@ -44,14 +44,31 @@ app.get("/api/data", (req, res) => {
 
 ::: code-group
 
+```bash [CLI]
+# Each call auto-manages tabs
+pay request https://provider.example.com/api/data
+pay request https://provider.example.com/api/data
+pay request https://provider.example.com/api/data
+
+# POST with custom headers — same tab reuse
+pay request -X POST \
+  -H "Authorization: Bearer tok" \
+  -d '{"prompt":"hello"}' \
+  https://provider.example.com/api/chat
+```
+
 ```typescript [TypeScript]
 import { PayClient } from "@pay-skill/sdk";
+
+// Fetch contract addresses — never hardcode these
+const contracts = await fetch("https://testnet.pay-skill.com/api/v1/contracts")
+  .then(r => r.json());
 
 const client = new PayClient({
   apiUrl: "https://testnet.pay-skill.com/api/v1",
   privateKey: process.env.PAYSKILL_KEY!,
-  chainId: 84532,
-  routerAddress: "0x24F26eCb1f46451994c59585817e87896749935D",
+  chainId: contracts.chain_id,
+  routerAddress: contracts.router,
 });
 
 // First call: SDK auto-opens a tab ($5 min), charges $0.10
@@ -65,14 +82,18 @@ const r3 = await client.request("https://provider.example.com/api/data");
 ```
 
 ```python [Python]
+import httpx
 from payskill import PayClient
+
+# Fetch contract addresses — never hardcode these
+contracts = httpx.get("https://testnet.pay-skill.com/api/v1/contracts").json()
 
 client = PayClient(
     api_url="https://testnet.pay-skill.com/api/v1",
     signer="raw",
     private_key="0xYOUR_KEY",
-    chain_id=84532,
-    router_address="0x24F26eCb1f46451994c59585817e87896749935D",
+    chain_id=contracts["chain_id"],
+    router_address=contracts["router"],
 )
 
 # First call: auto-opens tab, charges $0.10
@@ -81,19 +102,6 @@ r1 = client.request("https://provider.example.com/api/data")
 # Subsequent calls reuse the tab
 r2 = client.request("https://provider.example.com/api/data")
 r3 = client.request("https://provider.example.com/api/data")
-```
-
-```bash [CLI]
-# Each call auto-manages tabs
-pay request https://provider.example.com/api/data
-pay request https://provider.example.com/api/data
-pay request https://provider.example.com/api/data
-
-# POST with custom headers — same tab reuse
-pay request -X POST \
-  -H "Authorization: Bearer tok" \
-  -d '{"prompt":"hello"}' \
-  https://provider.example.com/api/chat
 ```
 
 :::

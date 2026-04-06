@@ -10,17 +10,19 @@
 import { Wallet } from "@pay-skill/sdk";
 
 const API_URL = "https://testnet.pay-skill.com/api/v1";
-const ROUTER = "0x24F26eCb1f46451994c59585817e87896749935D";
 
 async function main() {
   const key = process.env.PAYSKILL_KEY;
   if (!key) throw new Error("Set PAYSKILL_KEY env var");
 
+  // Fetch contract addresses — never hardcode these
+  const contracts = await fetch(`${API_URL}/contracts`).then((r) => r.json());
+
   const wallet = new Wallet({
     privateKey: key,
     chain: "base-sepolia",
     apiUrl: API_URL,
-    routerAddress: ROUTER,
+    routerAddress: contracts.router,
   });
 
   console.log("Agent:", wallet.address);

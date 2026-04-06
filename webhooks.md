@@ -6,14 +6,24 @@ Real-time event notifications delivered to your URL. Register a webhook to get n
 
 ::: code-group
 
+```bash [CLI]
+pay webhook register https://your-app.example.com/hooks \
+  --events "payment.completed,tab.charged" \
+  --secret "my-hmac-secret"
+```
+
 ```typescript [TypeScript]
 import { Wallet } from "@pay-skill/sdk";
+
+// Fetch contract addresses — never hardcode these
+const contracts = await fetch("https://testnet.pay-skill.com/api/v1/contracts")
+  .then(r => r.json());
 
 const wallet = new Wallet({
   privateKey: process.env.PAYSKILL_KEY!,
   chain: "base-sepolia",
   apiUrl: "https://testnet.pay-skill.com/api/v1",
-  routerAddress: "0x24F26eCb1f46451994c59585817e87896749935D",
+  routerAddress: contracts.router,
 });
 
 const hook = await wallet.registerWebhook(
@@ -25,14 +35,18 @@ console.log("webhook id:", hook.id);
 ```
 
 ```python [Python]
+import httpx
 from payskill import PayClient
+
+# Fetch contract addresses — never hardcode these
+contracts = httpx.get("https://testnet.pay-skill.com/api/v1/contracts").json()
 
 client = PayClient(
     api_url="https://testnet.pay-skill.com/api/v1",
     signer="raw",
     private_key="0xYOUR_KEY",
-    chain_id=84532,
-    router_address="0x24F26eCb1f46451994c59585817e87896749935D",
+    chain_id=contracts["chain_id"],
+    router_address=contracts["router"],
 )
 
 hook = client.register_webhook(
@@ -41,12 +55,6 @@ hook = client.register_webhook(
     secret="my-hmac-secret",
 )
 print("webhook id:", hook.id)
-```
-
-```bash [CLI]
-pay webhook register https://your-app.example.com/hooks \
-  --events "payment.completed,tab.charged" \
-  --secret "my-hmac-secret"
 ```
 
 :::
@@ -85,7 +93,24 @@ Every webhook delivery is a POST with a JSON body:
 }
 ```
 
-### Tab Events
+### tab.opened
+
+```json
+{
+  "event": "tab.opened",
+  "timestamp": "2026-04-01T12:00:00Z",
+  "data": {
+    "tab_id": "abc123",
+    "agent": "0xAgentAddress",
+    "provider": "0xProviderAddress",
+    "amount": 20000000,
+    "max_charge_per_call": 2000000,
+    "activation_fee": 500000
+  }
+}
+```
+
+### tab.charged
 
 ```json
 {
@@ -99,6 +124,92 @@ Every webhook delivery is a POST with a JSON body:
     "total_charged": 3000000,
     "balance_remaining": 17000000,
     "charge_count": 3
+  }
+}
+```
+
+### tab.low_balance
+
+```json
+{
+  "event": "tab.low_balance",
+  "timestamp": "2026-04-01T12:10:00Z",
+  "data": {
+    "tab_id": "abc123",
+    "agent": "0xAgentAddress",
+    "provider": "0xProviderAddress",
+    "balance_remaining": 2000000,
+    "amount": 20000000
+  }
+}
+```
+
+Sent when tab balance drops below 20% of the original amount.
+
+### tab.closing_soon
+
+```json
+{
+  "event": "tab.closing_soon",
+  "timestamp": "2026-04-01T12:15:00Z",
+  "data": {
+    "tab_id": "abc123",
+    "agent": "0xAgentAddress",
+    "provider": "0xProviderAddress",
+    "auto_close_at": "2026-04-02T12:15:00Z"
+  }
+}
+```
+
+Sent 24 hours before a tab with `auto_close_after` will be closed.
+
+### tab.closed
+
+```json
+{
+  "event": "tab.closed",
+  "timestamp": "2026-04-01T13:00:00Z",
+  "data": {
+    "tab_id": "abc123",
+    "agent": "0xAgentAddress",
+    "provider": "0xProviderAddress",
+    "total_charged": 5000000,
+    "provider_payout": 4950000,
+    "fee": 50000,
+    "agent_refund": 14500000
+  }
+}
+```
+
+### tab.topped_up
+
+```json
+{
+  "event": "tab.topped_up",
+  "timestamp": "2026-04-01T12:30:00Z",
+  "data": {
+    "tab_id": "abc123",
+    "agent": "0xAgentAddress",
+    "provider": "0xProviderAddress",
+    "amount": 10000000,
+    "new_balance": 22000000
+  }
+}
+```
+
+### x402.settled
+
+```json
+{
+  "event": "x402.settled",
+  "timestamp": "2026-04-01T12:45:00Z",
+  "data": {
+    "tx_hash": "0xdef...",
+    "from": "0xAgentAddress",
+    "to": "0xProviderAddress",
+    "amount": 1000000,
+    "fee": 10000,
+    "settlement": "direct"
   }
 }
 ```
@@ -156,6 +267,14 @@ def handle_webhook():
 
 ::: code-group
 
+```bash [CLI]
+# List
+pay webhook list
+
+# Delete
+pay webhook delete <WEBHOOK_ID>
+```
+
 ```typescript [TypeScript]
 // List all webhooks
 const hooks = await client.listWebhooks();
@@ -170,14 +289,6 @@ hooks = client.list_webhooks()
 
 # Delete one
 client.delete_webhook(hooks[0].id)
-```
-
-```bash [CLI]
-# List
-pay webhook list
-
-# Delete
-pay webhook delete <WEBHOOK_ID>
 ```
 
 :::

@@ -10,11 +10,11 @@ hero:
       text: Get Started
       link: /quickstart/direct
     - theme: alt
-      text: TypeScript SDK
-      link: /sdk/typescript
+      text: CLI Reference
+      link: /cli/
     - theme: alt
-      text: Python SDK
-      link: /sdk/python
+      text: Provider Guide
+      link: /provider-guide
 
 features:
   - title: Direct Payments
@@ -27,43 +27,41 @@ features:
 
 ## Install
 
+### CLI
+
+```bash
+# Homebrew (macOS/Linux)
+brew install pay-skill/tap/pay
+
+# Scoop (Windows)
+scoop bucket add pay-skill https://github.com/remit-md/scoop-pay
+scoop install pay
+
+# From source
+cargo install pay-cli
+```
+
+```bash
+# First-time setup
+pay init
+
+# Send $5 to a provider
+pay direct 0xprovider... 5.00
+
+# Make a paid API call (auto-handles x402)
+pay request https://api.example.com/data
+```
+
 ### TypeScript
 
 ```bash
 npm install @pay-skill/sdk
 ```
 
-```typescript
-import { PayClient } from "@pay-skill/sdk";
-
-const client = new PayClient({ signer: "cli" });
-await client.payDirect("0xprovider...", 5_000_000, { memo: "task-42" });
-```
-
 ### Python
 
 ```bash
-pip install pay-sdk
-```
-
-```python
-from pay import PayClient
-
-client = PayClient(signer="cli")
-client.pay_direct("0xprovider...", 5_000_000, memo="task-42")
-```
-
-### CLI
-
-```bash
-# Install via cargo
-cargo install pay-cli
-
-# First-time setup
-pay init
-
-# Send $5 to a provider
-pay direct 0xprovider... 5.00
+pip install payskill
 ```
 
 ## Three Primitives
@@ -71,14 +69,15 @@ pay direct 0xprovider... 5.00
 | Primitive | Use Case | Minimum | Settlement |
 |-----------|----------|---------|------------|
 | **Direct** | One-off payments | $1.00 | Immediate, on-chain |
-| **Tab** | Metered billing | $5.00 to open | Charges on-chain, transfers at close |
+| **Tab** | Metered billing | $5.00 to open | Charges batched off-chain, settled on close |
 | **x402** | HTTP paywalls | Provider-set | Routes through direct or tab |
 
 ## Links
 
-- [TypeScript SDK Reference](/sdk/typescript)
-- [Python SDK Reference](/sdk/python)
 - [CLI Reference](/cli/)
 - [Quickstart: Direct Payment](/quickstart/direct)
 - [Quickstart: Tab Lifecycle](/quickstart/tab)
+- [Provider Guide](/provider-guide)
+- [Contracts & Networks](/contracts)
+- [API Reference](/api-reference)
 - [Spec (pay.md)](https://pay-skill.com/)

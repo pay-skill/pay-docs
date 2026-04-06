@@ -123,6 +123,8 @@ Store routes as JSON in a KV namespace. Updatable without redeployment:
 | `free` | boolean | No | Skip payment for this route |
 | `allowlist` | string[] | No | Agent addresses that skip payment |
 | `price_endpoint` | string | No | URL for dynamic pricing |
+| `proxy_rewrite` | string | No | Rewrite path before proxying (Worker only) |
+| `proxy_params` | object | No | Query params to add to proxied request (Worker only) |
 
 ## Dynamic Pricing
 

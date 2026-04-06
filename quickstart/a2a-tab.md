@@ -13,14 +13,23 @@ Use A2A tasks with tab-backed metered billing. The agent opens a tab, and the pr
 
 ::: code-group
 
+```bash [CLI]
+# Open a $50 tab with $5 max per charge
+pay tab open 0xProviderAddress 50.00 --max-charge 5.00 --testnet
+```
+
 ```typescript [TypeScript]
 import { Wallet } from "@pay-skill/sdk";
+
+// Fetch contract addresses — never hardcode these
+const contracts = await fetch("https://testnet.pay-skill.com/api/v1/contracts")
+  .then(r => r.json());
 
 const agent = new Wallet({
   privateKey: process.env.AGENT_KEY!,
   chain: "base-sepolia",
   apiUrl: "https://testnet.pay-skill.com/api/v1",
-  routerAddress: "0x24F26eCb1f46451994c59585817e87896749935D",
+  routerAddress: contracts.router,
 });
 
 // Open a $50 tab with $5 max per charge
@@ -29,13 +38,17 @@ console.log("tab:", tab.tab_id);
 ```
 
 ```python [Python]
+import httpx
 from payskill import PayClient
+
+# Fetch contract addresses — never hardcode these
+contracts = httpx.get("https://testnet.pay-skill.com/api/v1/contracts").json()
 
 agent = PayClient(
     api_url="https://testnet.pay-skill.com/api/v1",
     signer="raw", private_key="0xAGENT_KEY",
-    chain_id=84532,
-    router_address="0x24F26eCb1f46451994c59585817e87896749935D",
+    chain_id=contracts["chain_id"],
+    router_address=contracts["router"],
 )
 
 tab = agent.open_tab("0xProviderAddress", 50_000_000, 5_000_000)

@@ -12,7 +12,6 @@ import httpx
 from payskill import PayClient
 
 API_URL = "https://testnet.pay-skill.com/api/v1"
-ROUTER = "0x24F26eCb1f46451994c59585817e87896749935D"
 
 
 def main() -> None:
@@ -20,12 +19,15 @@ def main() -> None:
     if not key:
         raise RuntimeError("Set PAYSKILL_KEY env var")
 
+    # Fetch contract addresses — never hardcode these
+    contracts = httpx.get(f"{API_URL}/contracts").json()
+
     client = PayClient(
         api_url=API_URL,
         signer="raw",
         private_key=key,
-        chain_id=84532,
-        router_address=ROUTER,
+        chain_id=contracts["chain_id"],
+        router_address=contracts["router"],
     )
 
     # Mint if needed

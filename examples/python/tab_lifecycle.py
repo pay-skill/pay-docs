@@ -11,7 +11,6 @@ import httpx
 from payskill import PayClient
 
 API_URL = "https://testnet.pay-skill.com/api/v1"
-ROUTER = "0x24F26eCb1f46451994c59585817e87896749935D"
 
 
 def main() -> None:
@@ -20,13 +19,16 @@ def main() -> None:
     if not agent_key or not provider_key:
         raise RuntimeError("Set AGENT_KEY and PROVIDER_KEY env vars")
 
+    # Fetch contract addresses — never hardcode these
+    contracts = httpx.get(f"{API_URL}/contracts").json()
+
     agent = PayClient(
         api_url=API_URL, signer="raw", private_key=agent_key,
-        chain_id=84532, router_address=ROUTER,
+        chain_id=contracts["chain_id"], router_address=contracts["router"],
     )
     provider = PayClient(
         api_url=API_URL, signer="raw", private_key=provider_key,
-        chain_id=84532, router_address=ROUTER,
+        chain_id=contracts["chain_id"], router_address=contracts["router"],
     )
 
     agent_status = agent.get_status()
@@ -47,9 +49,18 @@ def main() -> None:
 
     time.sleep(5)  # wait for on-chain
 
-    # 2. Charge (provider side)
+    # 2. Charge (provider side — via REST API with auth)
     print("\n2. Charging $1.00...")
-    charge = provider._post(f"/tabs/{tab.tab_id}/charge", {"amount": 1_000_000})
+    from payskill import build_auth_headers
+    charge_path = f"/api/v1/tabs/{tab.tab_id}/charge"
+    headers = build_auth_headers(
+        private_key=provider_key, method="POST", path=charge_path,
+        chain_id=contracts["chain_id"], router_address=contracts["router"],
+    )
+    charge = httpx.post(
+        f"{API_URL}/tabs/{tab.tab_id}/charge",
+        json={"amount": 1_000_000}, headers=headers, timeout=60,
+    ).json()
     print(f"charge status: {charge.get('status', 'ok')}")
 
     # 3. Close (agent side)

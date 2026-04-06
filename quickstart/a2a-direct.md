@@ -19,12 +19,24 @@ The agent card describes the server's A2A capabilities, supported payment method
 
 ## Send a Task with Payment
 
+The A2A endpoint requires EIP-712 authentication. Include `X-Pay-Agent`, `X-Pay-Signature`, `X-Pay-Timestamp`, and `X-Pay-Nonce` headers (see [Authentication](/sdk/typescript#authentication)).
+
 ::: code-group
 
 ```typescript [TypeScript]
+import { buildAuthHeaders } from "@pay-skill/sdk";
+
+const contracts = await fetch("https://testnet.pay-skill.com/api/v1/contracts")
+  .then(r => r.json());
+
+const authHeaders = await buildAuthHeaders(
+  process.env.PAYSKILL_KEY!, "POST", "/a2a",
+  { chainId: contracts.chain_id, routerAddress: contracts.router },
+);
+
 const response = await fetch("https://testnet.pay-skill.com/a2a", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: { "Content-Type": "application/json", ...authHeaders },
   body: JSON.stringify({
     jsonrpc: "2.0",
     id: "1",

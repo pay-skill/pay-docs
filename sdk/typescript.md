@@ -8,16 +8,24 @@ npm install @pay-skill/sdk
 pnpm add @pay-skill/sdk
 ```
 
+::: warning Amount Convention
+`Wallet` methods accept **dollars** (e.g., `5` = $5.00). `PayClient` methods accept **micro-USDC** (e.g., `5_000_000` = $5.00). Do not mix them up — sending `5` via PayClient sends $0.000005.
+:::
+
 ## Quick Start
 
 ```typescript
 import { Wallet } from "@pay-skill/sdk";
 
+// Fetch contract addresses — never hardcode these (see /contracts)
+const contracts = await fetch("https://pay-skill.com/api/v1/contracts")
+  .then(r => r.json());
+
 const wallet = new Wallet({
   privateKey: process.env.PAYSKILL_KEY!,
   chain: "base",
   apiUrl: "https://pay-skill.com/api/v1",
-  routerAddress: "0x...", // from /api/v1/contracts
+  routerAddress: contracts.router,
 });
 
 // Send $5 to a provider
@@ -99,8 +107,9 @@ const charge = await providerWallet.chargeTab(tabId, 1); // Charge $1.00
 #### Withdraw from a Tab (Provider-Side)
 
 ```typescript
-const result = await providerWallet.withdrawTab(tabId);
-// => { amount: 2000000, status: "open" }
+// Withdrawal is available on PayClient, not Wallet
+const result = await client.withdrawTab(tabId);
+// => Tab { tabId: "abc123", status: "open", ... }
 ```
 
 Withdraw all accumulated charges from a tab (provider-only). The 1% processing fee is deducted (0.75% for high-volume providers). The tab stays open for more charges. Minimum withdrawal: $1.00 -- charges below $1.00 accumulate until the threshold is reached; at `closeTab`, all remaining charges are paid out regardless of amount. Returns the updated Tab.
@@ -138,6 +147,16 @@ const fundUrl = await wallet.createFundLink();
 
 const withdrawUrl = await wallet.createWithdrawLink();
 // => "https://pay-skill.com/withdraw?token=abc123"
+```
+
+Links expire after **1 hour**, or **4 hours** after first access.
+
+```typescript
+// With options
+const fundUrl = await wallet.createFundLink({
+  agentName: "my-agent",
+  messages: [{ role: "system", content: "Fund request" }],
+});
 ```
 
 ### Webhooks
@@ -207,7 +226,7 @@ If the upstream returns **402 Payment Required**, the SDK automatically:
 
 1. Decodes the `PAYMENT-REQUIRED` header (base64 -> JSON), reads `accepts[0].extra.settlement`, `accepts[0].amount`, and `accepts[0].payTo`
 2. If `settlement === "tab"`: finds or opens a tab, charges it, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing tab proof in `extensions.pay`
-3. If `settlement === "direct"`: calls `payDirect()`, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing direct proof in `payload`
+3. If `settlement === "direct"`: signs an EIP-3009 `transferWithAuthorization`, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing the signed authorization in `payload`
 
 Options:
 
@@ -288,6 +307,31 @@ const client = new PayClient({
 });
 ```
 
+### OWS Signer
+
+Uses the [Open Wallet Standard](https://github.com/open-wallet-standard/wallet-standard) for policy-gated signing. Requires the `ows` CLI and `OWS_WALLET_ID` env var.
+
+```typescript
+import { OwsSigner } from "@pay-skill/sdk";
+
+const signer = await OwsSigner.create({
+  walletId: "my-wallet",
+  chain: "base",          // or "base-sepolia"
+  owsApiKey: "ows-...",   // from `pay ows init`
+});
+
+console.log(signer.address); // derived from OWS wallet
+```
+
+OWS signers only support typed data signing (not raw hash signing). Use with `PayClient`:
+
+```typescript
+const client = new PayClient({
+  signer: signer,
+  apiUrl: "https://pay-skill.com/api/v1",
+});
+```
+
 ---
 
 ## Error Handling
@@ -338,12 +382,16 @@ interface DirectPaymentResult {
 interface Tab {
   tabId: string;
   provider: string;
-  amount: number;           // Total locked (micro-USDC)
+  amount: number;              // Total locked (micro-USDC)
   balanceRemaining: number;
   totalCharged: number;
   chargeCount: number;
   maxChargePerCall: number;
-  status: TabStatus;        // "open" | "closed"
+  totalWithdrawn: number;
+  status: TabStatus;           // "open" | "closed"
+  pendingChargeCount: number;  // Buffered charges not yet settled
+  pendingChargeTotal: number;  // Pending amount (micro-USDC)
+  effectiveBalance: number;    // balanceRemaining - pendingChargeTotal
 }
 
 interface StatusResponse {

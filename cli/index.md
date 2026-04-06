@@ -41,15 +41,27 @@ pay direct 0xProvider... 5.00
 
 Fresh installs default to **Base mainnet**. Use `pay network testnet` to switch to Base Sepolia for development.
 
+## Global Flags
+
+These flags apply to all commands:
+
+| Flag | Description |
+|------|-------------|
+| `--plain` | Human-readable output (default: JSON) |
+| `--testnet` | Use Base Sepolia testnet for this command |
+| `--api-url <URL>` | Override API URL (advanced) |
+| `--chain-id <ID>` | Override chain ID (advanced) |
+| `--router-address <ADDR>` | Override router contract address (advanced) |
+
 ## Output
 
-Output is **JSON by default**. Use `--no-json` for human-readable format:
+Output is **JSON by default**. Use `--plain` for human-readable format:
 
 ```bash
 pay status
 # => {"wallet":"0x...","balance_usdc":"142.50","open_tabs":2,"total_locked":30000000,"network":"mainnet"}
 
-pay --no-json status
+pay --plain status
 # =>   Network: Base (mainnet)
 # =>   Balance: 142.50 USDC
 # =>   Open tabs: 2
@@ -177,6 +189,14 @@ pay tab close <TAB_ID>
 
 Either agent or provider can close. On close: 99% of charged amount goes to provider, 1% fee, remainder returns to agent.
 
+#### tab get
+
+Get details of a specific tab.
+
+```bash
+pay tab get <TAB_ID>
+```
+
 #### tab list
 
 List all tabs.
@@ -270,7 +290,7 @@ Subprocess signer protocol for SDKs. Reads a 32-byte hex hash from stdin, writes
 echo "0xabcdef..." | pay sign
 ```
 
-Used internally by SDK CLI signers. Requires `PAYSKILL_SIGNER_KEY` env var.
+Used internally by SDK CLI signers. Uses the unified signer resolution chain: OS keychain → encrypted file → `PAYSKILL_SIGNER_KEY` env var.
 
 ### mint
 

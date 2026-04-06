@@ -22,6 +22,11 @@ Register a webhook to get notified instantly:
 
 ::: code-group
 
+```bash [CLI]
+pay webhook register https://your-api.example.com/hooks \
+  --events "payment.completed"
+```
+
 ```typescript [TypeScript]
 import { Wallet } from "@pay-skill/sdk";
 
@@ -55,11 +60,6 @@ provider.register_webhook(
 )
 ```
 
-```bash [CLI]
-pay webhook register https://your-api.example.com/hooks \
-  --events "payment.completed"
-```
-
 :::
 
 When a payment arrives, your webhook receives:
@@ -83,6 +83,10 @@ You receive `amount * 0.99` (1% fee deducted).
 
 ::: code-group
 
+```bash [CLI]
+pay status
+```
+
 ```typescript [TypeScript]
 const balance = await provider.balance();
 console.log("Balance:", balance, "USDC");
@@ -91,10 +95,6 @@ console.log("Balance:", balance, "USDC");
 ```python [Python]
 status = provider.get_status()
 print(f"Balance: {status.balance / 1_000_000:.2f} USDC")
-```
-
-```bash [CLI]
-pay status
 ```
 
 :::
@@ -109,6 +109,11 @@ When an agent opens a tab with you, you can charge it for each unit of work.
 
 ::: code-group
 
+```bash [CLI]
+pay tab charge abc123 1.00
+pay tab charge abc123 0.50
+```
+
 ```typescript [TypeScript]
 // Agent opened a tab — you received a tab.opened webhook with the tab_id
 
@@ -120,14 +125,20 @@ await provider.chargeTab("abc123", 0.5);
 ```
 
 ```python [Python]
-# Charge per unit of work
-provider._post("/tabs/abc123/charge", {"amount": 1_000_000})  # $1.00
-provider._post("/tabs/abc123/charge", {"amount": 500_000})    # $0.50
-```
+# Charge per unit of work (use the REST API directly)
+import httpx
+from payskill import build_auth_headers
 
-```bash [CLI]
-pay tab charge abc123 1.00
-pay tab charge abc123 0.50
+headers = build_auth_headers(
+    private_key="0xPROVIDER_KEY",
+    method="POST", path="/api/v1/tabs/abc123/charge",
+    chain_id=8453, router_address="0x...",  # from /api/v1/contracts
+)
+httpx.post(
+    "https://pay-skill.com/api/v1/tabs/abc123/charge",
+    json={"amount": 1_000_000},  # $1.00
+    headers=headers,
+)
 ```
 
 :::
@@ -156,12 +167,12 @@ Either party can close. As provider, close when the work is done:
 
 ::: code-group
 
-```typescript [TypeScript]
-await provider.closeTab("abc123");
-```
-
 ```bash [CLI]
 pay tab close abc123
+```
+
+```typescript [TypeScript]
+await provider.closeTab("abc123");
 ```
 
 :::
@@ -194,15 +205,10 @@ If you want full control, implement the x402 V2 protocol in your backend.
 
 ```javascript
 // Express example — or use pay-gate for zero-code setup
-app.get("/api/premium-data", (req, res) => {
+app.get("/api/premium-data", async (req, res) => {
   const paymentSig = req.headers["payment-signature"];
 
-  if (paymentSig) {
-    // Verify with facilitator, then serve content
-    return res.json({ data: "premium content" });
-  }
-
-  // No payment — return 402 with v2 PaymentRequired
+  // Build payment requirements (used for both 402 response and verification)
   const paymentRequired = {
     x402Version: 2,
     resource: {
@@ -211,9 +217,9 @@ app.get("/api/premium-data", (req, res) => {
     },
     accepts: [{
       scheme: "exact",
-      network: "eip155:8453",
+      network: "eip155:8453",              // mainnet; use /api/v1/contracts → chain_id
       amount: "1000000",                   // $1.00 in micro-USDC
-      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      asset: "0x...",                        // USDC address from /api/v1/contracts → usdc
       payTo: "0xYourProviderWallet",
       maxTimeoutSeconds: 60,
       extra: {
@@ -227,6 +233,22 @@ app.get("/api/premium-data", (req, res) => {
   };
 
   const encoded = Buffer.from(JSON.stringify(paymentRequired)).toString("base64");
+
+  if (paymentSig) {
+    // Verify payment with the facilitator
+    const verifyResp = await fetch("https://pay-skill.com/x402/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        x402Version: 2,
+        paymentPayload: paymentSig,
+        paymentRequirements: encoded,
+      }),
+    });
+    const { isValid } = await verifyResp.json();
+    if (isValid) return res.json({ data: "premium content" });
+    // Fall through to 402 if invalid
+  }
   res.set("PAYMENT-REQUIRED", encoded);
   res.status(402).json({
     error: "payment_required",

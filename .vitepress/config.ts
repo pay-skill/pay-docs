@@ -21,10 +21,9 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: "Getting Started", link: "/" },
-      { text: "pay-gate", link: "/gate/" },
-      { text: "TypeScript SDK", link: "/sdk/typescript" },
-      { text: "Python SDK", link: "/sdk/python" },
       { text: "CLI", link: "/cli/" },
+      { text: "pay-gate", link: "/gate/" },
+      { text: "API Reference", link: "/api-reference" },
       {
         text: "GitHub",
         items: [
@@ -42,18 +41,18 @@ export default defineConfig({
     sidebar: [
       {
         text: "Getting Started",
-        items: [{ text: "Introduction", link: "/" }],
-      },
-      {
-        text: "SDK Reference",
         items: [
-          { text: "TypeScript", link: "/sdk/typescript" },
-          { text: "Python", link: "/sdk/python" },
+          { text: "Introduction", link: "/" },
+          { text: "Contracts & Networks", link: "/contracts" },
         ],
       },
       {
-        text: "CLI Reference",
-        items: [{ text: "Commands", link: "/cli/" }],
+        text: "For Providers",
+        items: [
+          { text: "Provider Guide", link: "/provider-guide" },
+          { text: "Webhooks", link: "/webhooks" },
+          { text: "pay-gate", link: "/gate/" },
+        ],
       },
       {
         text: "pay-gate",
@@ -64,10 +63,18 @@ export default defineConfig({
         ],
       },
       {
-        text: "Guides",
+        text: "CLI Reference",
+        items: [{ text: "Commands", link: "/cli/" }],
+      },
+      {
+        text: "API Reference",
+        items: [{ text: "REST API", link: "/api-reference" }],
+      },
+      {
+        text: "SDK Reference",
         items: [
-          { text: "Provider Guide", link: "/provider-guide" },
-          { text: "Webhooks", link: "/webhooks" },
+          { text: "TypeScript", link: "/sdk/typescript" },
+          { text: "Python", link: "/sdk/python" },
         ],
       },
       {
@@ -75,8 +82,8 @@ export default defineConfig({
         items: [
           { text: "Direct Payment", link: "/quickstart/direct" },
           { text: "Tab Lifecycle", link: "/quickstart/tab" },
-          { text: "x402 Direct Settlement", link: "/quickstart/x402-direct" },
-          { text: "x402 Tab Settlement", link: "/quickstart/x402-tab" },
+          { text: "x402 Direct", link: "/quickstart/x402-direct" },
+          { text: "x402 Tab", link: "/quickstart/x402-tab" },
           { text: "A2A + Direct", link: "/quickstart/a2a-direct" },
           { text: "A2A + Tab", link: "/quickstart/a2a-tab" },
           { text: "AP2 Mandate", link: "/quickstart/ap2" },

@@ -8,17 +8,25 @@ pip install payskill
 
 Requires Python 3.10+.
 
+::: warning Amount Units
+**All amounts are micro-USDC** (6 decimals). $1.00 = 1,000,000. $5.00 = 5,000,000. Do not pass dollar amounts — `pay_direct("0x...", 5)` sends $0.000005.
+:::
+
 ## Quick Start
 
 ```python
+import httpx
 from payskill import PayClient
+
+# Fetch contract addresses — never hardcode these (see /contracts)
+contracts = httpx.get("https://pay-skill.com/api/v1/contracts").json()
 
 client = PayClient(
     api_url="https://pay-skill.com/api/v1",
     signer="raw",
     private_key="0xabc...",
-    chain_id=8453,
-    router_address="0x...",  # from /api/v1/contracts
+    chain_id=contracts["chain_id"],
+    router_address=contracts["router"],
 )
 
 # Send $5 to a provider
@@ -134,7 +142,7 @@ If the upstream returns **402 Payment Required**, the SDK automatically:
 
 1. Decodes the `PAYMENT-REQUIRED` header (base64 -> JSON), reads `accepts[0].extra.settlement`, `accepts[0].amount`, and `accepts[0].payTo`
 2. If `settlement == "tab"`: finds or opens a tab, charges it, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing tab proof in `extensions.pay`
-3. If `settlement == "direct"`: calls `pay_direct()`, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing direct proof in `payload`
+3. If `settlement == "direct"`: signs an EIP-3009 `transferWithAuthorization`, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing the signed authorization in `payload`
 
 Options:
 
@@ -183,6 +191,16 @@ fund_url = client.create_fund_link()
 
 withdraw_url = client.create_withdraw_link()
 # => "https://pay-skill.com/withdraw?token=abc123"
+```
+
+Links expire after **1 hour**, or **4 hours** after first access.
+
+```python
+# With options
+fund_url = client.create_fund_link(
+    agent_name="my-agent",
+    messages=[{"role": "system", "content": "Fund request"}],
+)
 ```
 
 ---
@@ -272,13 +290,17 @@ class DirectPaymentResult(BaseModel):
 class Tab(BaseModel):
     tab_id: str
     provider: str
-    amount: int               # Total locked (micro-USDC)
-    balance_remaining: int    # Remaining balance
+    amount: int                  # Total locked (micro-USDC)
+    balance_remaining: int       # Remaining balance
     total_charged: int
     charge_count: int
     max_charge_per_call: int
-    status: str               # "open" | "closed"
+    total_withdrawn: int
+    status: str                  # "open" | "closed"
     auto_close_after: str | None
+    pending_charge_count: int    # Buffered charges not yet settled
+    pending_charge_total: int    # Pending amount (micro-USDC)
+    effective_balance: int       # balance_remaining - pending_charge_total
 
 class StatusResponse(BaseModel):
     wallet: str

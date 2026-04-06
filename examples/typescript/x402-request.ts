@@ -12,11 +12,13 @@ import { createServer } from "node:http";
 import { PayClient } from "@pay-skill/sdk";
 
 const API_URL = "https://testnet.pay-skill.com/api/v1";
-const ROUTER = "0x24F26eCb1f46451994c59585817e87896749935D";
 
 async function main() {
   const key = process.env.PAYSKILL_KEY;
   if (!key) throw new Error("Set PAYSKILL_KEY env var");
+
+  // Fetch contract addresses — never hardcode these
+  const contracts = await fetch(`${API_URL}/contracts`).then((r) => r.json());
 
   // Start a local test server that returns v2 402
   const server = createServer((req, res) => {
@@ -31,9 +33,9 @@ async function main() {
         resource: { url: "/data", mimeType: "application/json" },
         accepts: [{
           scheme: "exact",
-          network: "eip155:84532",
+          network: `eip155:${contracts.chain_id}`,
           amount: "1000000",
-          asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          asset: contracts.usdc,
           payTo: "0x000000000000000000000000000000000000dEaD",
           maxTimeoutSeconds: 60,
           extra: { name: "USDC", version: "2", facilitator: "https://testnet.pay-skill.com/x402", settlement: "direct" },
@@ -57,8 +59,8 @@ async function main() {
     const client = new PayClient({
       apiUrl: API_URL,
       privateKey: key,
-      chainId: 84532,
-      routerAddress: ROUTER,
+      chainId: contracts.chain_id,
+      routerAddress: contracts.router,
     });
 
     console.log("Requesting (will auto-pay on 402)...");

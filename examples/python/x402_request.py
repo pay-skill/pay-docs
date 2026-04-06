@@ -15,7 +15,10 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from payskill import PayClient
 
 API_URL = "https://testnet.pay-skill.com/api/v1"
-ROUTER = "0x24F26eCb1f46451994c59585817e87896749935D"
+
+# Fetch contract addresses at module level — never hardcode these
+import httpx as _httpx
+contracts = _httpx.get(f"{API_URL}/contracts").json()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -35,7 +38,7 @@ class Handler(BaseHTTPRequestHandler):
                     "scheme": "exact",
                     "network": "eip155:84532",
                     "amount": "1000000",
-                    "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                    "asset": contracts["usdc"],
                     "payTo": "0x000000000000000000000000000000000000dEaD",
                     "maxTimeoutSeconds": 60,
                     "extra": {
@@ -72,7 +75,7 @@ def main() -> None:
     try:
         client = PayClient(
             api_url=API_URL, signer="raw", private_key=key,
-            chain_id=84532, router_address=ROUTER,
+            chain_id=contracts["chain_id"], router_address=contracts["router"],
         )
 
         print("Requesting (will auto-pay on 402)...")
