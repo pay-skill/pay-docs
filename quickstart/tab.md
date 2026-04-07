@@ -71,11 +71,11 @@ Tabs have two fee components:
 | Fee | When | Formula | Discountable? |
 |-----|------|---------|---------------|
 | **Activation fee** | Paid at open | `max($0.10, 1% of tab amount)` | No |
-| **Processing fee** | Paid at close or withdraw | `max($0.002, 1%)` per charge | Yes (rate portion only) |
+| **Processing fee** | Paid at close or rectification | `max($0.002, 1%)` per charge | Yes (rate portion only) |
 
 The activation fee is non-refundable and covers on-chain gas for the tab lifecycle. It is deducted from the locked balance immediately. The $0.10 floor applies to tabs under $10; above $10 the standard 1% rate applies. The $0.002 per-charge floor applies below $0.20/charge; above $0.20 the standard 1% rate applies.
 
-The processing fee is deducted from the provider payout when the tab is closed or when the provider withdraws charged funds. Providers above **$50k/month volume** pay a reduced rate: `max($0.002, 0.75%)`. The $0.002 floor always applies regardless of volume tier. Minimum withdrawal is $1.00 -- charges below $1.00 accumulate until the threshold is reached, and at `closeTab` all remaining charges are paid out regardless of amount.
+The processing fee is deducted from the provider payout at close or during scheduled rectification (5am/5pm UTC daily). Providers above **$50k/month volume** pay a reduced rate: `max($0.002, 0.75%)`. The $0.002 floor always applies regardless of volume tier.
 
 ### Effective total cost
 
@@ -153,27 +153,11 @@ await agent.topUpTab("abc123", 10);  // add $10.00
 
 :::
 
-## 4. Withdraw Charged Funds
+## 4. Scheduled Rectification
 
-The provider can withdraw accumulated charges at any time while the tab stays open. The same 1% fee applies (identical to `closeTab`). The tab remains active for more charges after withdrawal. Minimum withdrawal: $1.00 -- charges below $1.00 accumulate until the threshold is reached. At `closeTab`, all remaining charges are paid out regardless of amount.
+Providers receive earned charges automatically via scheduled rectification (5:00 AM and 5:00 PM UTC daily). For tabs with more than 10 settled charges and at least $0.10 unwithdrawn, the server calls `withdrawCharged` on-chain. The 1% processing fee is deducted. The tab stays open.
 
-::: code-group
-
-```bash [CLI]
-pay tab withdraw abc123
-```
-
-```typescript [TypeScript]
-const result = await provider.withdrawTab("abc123");
-console.log(`Withdrawn: $${result.amount / 1_000_000}`);
-```
-
-```python [Python]
-result = provider.withdraw_tab("abc123")
-print(f"Withdrawn: ${result.amount / 1_000_000}")
-```
-
-:::
+No manual withdrawal is needed. Providers can also close the tab at any time to receive all remaining funds immediately.
 
 ## 5. Close the Tab
 

@@ -104,16 +104,6 @@ const charge = await providerWallet.chargeTab(tabId, 1); // Charge $1.00
 // => { status: "approved" }
 ```
 
-#### Withdraw from a Tab (Provider-Side)
-
-```typescript
-// Withdrawal is available on PayClient, not Wallet
-const result = await client.withdrawTab(tabId);
-// => Tab { tabId: "abc123", status: "open", ... }
-```
-
-Withdraw all accumulated charges from a tab (provider-only). The 1% processing fee is deducted (0.75% for high-volume providers). The tab stays open for more charges. Minimum withdrawal: $1.00 -- charges below $1.00 accumulate until the threshold is reached; at `closeTab`, all remaining charges are paid out regardless of amount. Returns the updated Tab.
-
 #### Close a Tab
 
 ```typescript
@@ -212,7 +202,6 @@ const tab = await client.openTab("0xProvider", 20_000_000, { maxChargePerCall: 2
 await client.topUpTab(tab.tabId, 10_000_000);
 const tabs = await client.listTabs();
 const single = await client.getTab(tab.tabId);
-await client.withdrawTab(tab.tabId);
 await client.closeTab(tab.tabId);
 ```
 

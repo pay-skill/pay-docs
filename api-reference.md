@@ -326,28 +326,6 @@ Add funds to an existing open tab.
 
 ---
 
-### POST /api/v1/tabs/:id/withdraw
-
-Withdraw remaining balance from an open tab. Only the agent can withdraw.
-
-**Minimum:** `1000000` ($1.00).
-
-**Response**
-
-```json
-{
-  "tab_id": "tab_abc123",
-  "withdrawal_id": "wd_abc123",
-  "amount": 3000000,
-  "fee": 30000,
-  "total_withdrawn": 3000000,
-  "tx_hash": "0x...",
-  "status": "withdrawn"
-}
-```
-
----
-
 ### GET /api/v1/tabs/:id/charges
 
 List charges for a tab.

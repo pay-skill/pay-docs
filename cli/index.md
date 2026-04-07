@@ -169,16 +169,6 @@ Add funds to an existing tab.
 pay tab topup <TAB_ID> 10.00
 ```
 
-#### tab withdraw
-
-Withdraw earned charges from an open tab (provider-only).
-
-```bash
-pay tab withdraw <TAB_ID>
-```
-
-The 1% fee is deducted from the withdrawal. The tab stays open for more charges. Minimum withdrawal: $1.00 -- charges below $1.00 accumulate until the threshold is reached; at `closeTab`, all remaining charges are paid out regardless of amount.
-
 #### tab close
 
 Close a tab and distribute funds.

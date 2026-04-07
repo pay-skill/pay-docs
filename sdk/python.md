@@ -102,15 +102,6 @@ tab = client.open_tab(
 tab = client.top_up_tab("abc123", 10_000_000)  # Add $10.00
 ```
 
-#### Withdraw from a Tab (Provider-Side)
-
-```python
-result = client.withdraw_tab("abc123")
-# => Tab(tab_id="abc123", status="open")
-```
-
-Withdraw all accumulated charges from a tab (provider-only). The 1% processing fee is deducted (0.75% for high-volume providers). The tab stays open for more charges. Minimum withdrawal: $1.00 -- charges below $1.00 accumulate until the threshold is reached; at `closeTab`, all remaining charges are paid out regardless of amount. Returns the updated Tab.
-
 #### Close a Tab
 
 ```python
