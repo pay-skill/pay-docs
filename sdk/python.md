@@ -162,7 +162,7 @@ status.balance    # 142500000 (micro-USDC as int)
 # Register
 hook = client.register_webhook(
     url="https://example.com/hooks",
-    events=["payment.completed", "tab.charged"],  # Optional filter
+    events=["payment.completed", "tab.opened"],  # Optional filter
     secret="my-hmac-secret",                       # Optional HMAC key
 )
 # => WebhookRegistration(id="hook-123", url="...", events=[...])

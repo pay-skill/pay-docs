@@ -92,10 +92,10 @@ const response = await fetch("https://testnet.pay-skill.com/a2a", {
 Register a webhook to track charges in real time:
 
 ```bash
-pay webhook register https://your-app.example.com/hooks --events "tab.charged"
+pay webhook register https://your-app.example.com/hooks --events "tab.closed"
 ```
 
-Each charge triggers a `tab.charged` webhook with the amount and running total.
+Each close triggers a `tab.closed` webhook with the final settlement amounts.
 
 ## Close When Done
 

@@ -249,7 +249,7 @@ Manage webhook registrations.
 #### webhook register
 
 ```bash
-pay webhook register https://example.com/hooks --events payment.completed,tab.charged
+pay webhook register https://example.com/hooks --events payment.completed,tab.opened
 pay webhook register https://example.com/hooks --events all --secret "my-secret"
 ```
 
@@ -258,7 +258,7 @@ pay webhook register https://example.com/hooks --events all --secret "my-secret"
 | `--events <LIST>` | **Required.** Comma-separated event filter, or `all` |
 | `--secret <SECRET>` | HMAC signing secret (auto-generated if omitted) |
 
-Available events: `tab.opened`, `tab.charged`, `tab.low_balance`, `tab.closing_soon`, `tab.closed`, `tab.topped_up`, `payment.completed`, `x402.settled`
+Available events: `tab.opened`, `tab.low_balance`, `tab.closing_soon`, `tab.closed`, `tab.topped_up`, `payment.completed`, `x402.settled`
 
 #### webhook list
 

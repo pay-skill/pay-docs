@@ -1,6 +1,6 @@
 # Webhooks
 
-Real-time event notifications delivered to your URL. Register a webhook to get notified when payments complete, tabs are charged, or x402 settlements happen.
+Real-time event notifications delivered to your URL. Register a webhook to get notified when payments complete, tabs change state, or x402 settlements happen.
 
 ## Register a Webhook
 
@@ -8,7 +8,7 @@ Real-time event notifications delivered to your URL. Register a webhook to get n
 
 ```bash [CLI]
 pay webhook register https://your-app.example.com/hooks \
-  --events "payment.completed,tab.charged" \
+  --events "payment.completed,tab.opened" \
   --secret "my-hmac-secret"
 ```
 
@@ -28,7 +28,7 @@ const wallet = new Wallet({
 
 const hook = await wallet.registerWebhook(
   "https://your-app.example.com/hooks",
-  ["payment.completed", "tab.charged"],  // optional filter
+  ["payment.completed", "tab.opened"],  // optional filter
   "my-hmac-secret",                       // optional signing secret
 );
 console.log("webhook id:", hook.id);
@@ -51,7 +51,7 @@ client = PayClient(
 
 hook = client.register_webhook(
     url="https://your-app.example.com/hooks",
-    events=["payment.completed", "tab.charged"],
+    events=["payment.completed", "tab.opened"],
     secret="my-hmac-secret",
 )
 print("webhook id:", hook.id)
@@ -67,7 +67,6 @@ If you omit `secret`, the server generates one automatically.
 |-------|------|-------------|
 | `payment.completed` | Direct payment confirms on-chain | Agent and provider |
 | `tab.opened` | Tab created and funded | Agent and provider |
-| `tab.charged` | Provider charges a tab | Agent and provider |
 | `tab.low_balance` | Tab balance drops below 20% | Agent |
 | `tab.closing_soon` | Tab will auto-close in 24h | Agent and provider |
 | `tab.closed` | Tab closed, funds distributed | Agent and provider |
@@ -106,24 +105,6 @@ Every webhook delivery is a POST with a JSON body:
     "amount": 20000000,
     "max_charge_per_call": 2000000,
     "activation_fee": 200000
-  }
-}
-```
-
-### tab.charged
-
-```json
-{
-  "event": "tab.charged",
-  "timestamp": "2026-04-01T12:05:00Z",
-  "data": {
-    "tab_id": "abc123",
-    "agent": "0xAgentAddress",
-    "provider": "0xProviderAddress",
-    "charge_amount": 1000000,
-    "total_charged": 3000000,
-    "balance_remaining": 17000000,
-    "charge_count": 3
   }
 }
 ```

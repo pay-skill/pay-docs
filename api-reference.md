@@ -407,7 +407,7 @@ Register a webhook endpoint.
   "id": "wh_abc123",
   "wallet": "0x...",
   "url": "https://example.com/hooks",
-  "events": ["payment.completed", "tab.charged"],
+  "events": ["payment.completed", "tab.opened"],
   "active": true
 }
 ```

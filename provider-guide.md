@@ -149,7 +149,7 @@ Register for tab events to track charges and balance:
 
 ```bash
 pay webhook register https://your-api.example.com/hooks \
-  --events "tab.opened,tab.charged,tab.closed,tab.topped_up"
+  --events "tab.opened,tab.closed,tab.topped_up"
 ```
 
 Key events for providers:
@@ -157,7 +157,6 @@ Key events for providers:
 | Event | What it means |
 |-------|--------------|
 | `tab.opened` | Agent created a tab with you — you can start charging |
-| `tab.charged` | Your charge was confirmed — includes running total |
 | `tab.topped_up` | Agent added more funds — tab balance increased |
 | `tab.closed` | Tab closed — you receive 99% of total charged |
 

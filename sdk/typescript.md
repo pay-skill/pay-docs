@@ -155,7 +155,7 @@ const fundUrl = await wallet.createFundLink({
 // Register
 const hook = await wallet.registerWebhook(
   "https://example.com/hooks",
-  ["payment.completed", "tab.charged"],  // Event filter (optional)
+  ["payment.completed", "tab.opened"],  // Event filter (optional)
   "my-secret",                           // HMAC signing secret (optional)
 );
 // => { id: "hook-123" }
