@@ -190,7 +190,7 @@ api.example.com {
 }
 ```
 
-See the [gate repo examples/](https://github.com/remit-md/gate/tree/main/examples) for complete configs including Envoy.
+See the [gate repo examples/](https://github.com/pay-skill/gate/tree/main/examples) for complete configs including Envoy.
 
 ## Verify It Works
 

@@ -34,7 +34,7 @@ features:
 brew install pay-skill/tap/pay
 
 # Scoop (Windows)
-scoop bucket add pay-skill https://github.com/remit-md/scoop-pay
+scoop bucket add pay-skill https://github.com/pay-skill/scoop-pay
 scoop install pay
 
 # From source

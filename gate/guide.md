@@ -232,7 +232,7 @@ http {
 }
 ```
 
-The `gate.js` njs handler is in the [gate repo examples/](https://github.com/remit-md/gate/tree/main/examples).
+The `gate.js` njs handler is in the [gate repo examples/](https://github.com/pay-skill/gate/tree/main/examples).
 
 **Envoy** — uses `ext_authz`:
 

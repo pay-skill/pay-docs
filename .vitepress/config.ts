@@ -29,11 +29,11 @@ export default defineConfig({
         items: [
           {
             text: "Protocol",
-            link: "https://github.com/remit-md/pay-protocol",
+            link: "https://github.com/pay-skill/pay-protocol",
           },
-          { text: "SDK", link: "https://github.com/remit-md/pay-sdk" },
-          { text: "CLI", link: "https://github.com/remit-md/pay-cli" },
-          { text: "Gate", link: "https://github.com/remit-md/gate" },
+          { text: "SDK", link: "https://github.com/pay-skill/pay-sdk" },
+          { text: "CLI", link: "https://github.com/pay-skill/pay-cli" },
+          { text: "Gate", link: "https://github.com/pay-skill/gate" },
         ],
       },
     ],
@@ -92,7 +92,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/remit-md" },
+      { icon: "github", link: "https://github.com/pay-skill" },
     ],
 
     search: {

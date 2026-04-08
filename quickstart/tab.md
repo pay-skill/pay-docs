@@ -190,8 +190,8 @@ See [Fees](#fees) for full breakdown including volume discounts.
 
 ## Runnable Examples
 
-- [TypeScript](https://github.com/remit-md/pay-sdk/blob/main/docs/examples/typescript/tab-lifecycle.ts)
-- [Python](https://github.com/remit-md/pay-sdk/blob/main/docs/examples/python/tab_lifecycle.py)
+- [TypeScript](https://github.com/pay-skill/pay-sdk/blob/main/docs/examples/typescript/tab-lifecycle.ts)
+- [Python](https://github.com/pay-skill/pay-sdk/blob/main/docs/examples/python/tab_lifecycle.py)
 
 ## Next Steps
 
