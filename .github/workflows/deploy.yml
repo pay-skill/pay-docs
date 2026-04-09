@@ -60,14 +60,23 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ env.PROD_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Checkout skills
+        uses: actions/checkout@v6
+        with:
+          path: repo
+
       - name: Deploy static files
         run: |
           ssh -i ~/.ssh/deploy_key root@${{ env.PROD_HOST }} \
-            "mkdir -p /var/www/pay/docs"
+            "mkdir -p /var/www/pay/docs /var/www/pay/skills/pay/references"
           rsync -az --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             dist/ \
             root@${{ env.PROD_HOST }}:/var/www/pay/docs/
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            repo/skills/pay/ \
+            root@${{ env.PROD_HOST }}:/var/www/pay/skills/pay/
 
       - name: Ensure nginx docs location
         run: |
@@ -100,14 +109,36 @@ jobs:
             fi
           '
 
+      - name: Ensure nginx skills location
+        run: |
+          ssh -i ~/.ssh/deploy_key root@${{ env.PROD_HOST }} '
+            CONF="/etc/nginx/sites-available/pay-production.conf"
+            if [ -f "$CONF" ] && ! grep -q "/var/www/pay/skills/" "$CONF"; then
+              sed -i "/# Landing page/i\\
+              # Skills (raw markdown for Claude Code)\\
+              location /skills/ {\\
+                  alias /var/www/pay/skills/;\\
+                  default_type text/markdown;\\
+                  add_header Access-Control-Allow-Origin \"*\";\\
+              }\\
+              " "$CONF"
+              nginx -t && systemctl reload nginx
+              echo "--- nginx updated with /skills/ block"
+            else
+              echo "--- nginx already has /skills/ block (or config not found)"
+            fi
+          '
+
       - name: Verify deployment
         run: |
           ssh -i ~/.ssh/deploy_key root@${{ env.PROD_HOST }} \
-            "ls /var/www/pay/docs/index.html && echo '--- docs deploy OK'"
+            "ls /var/www/pay/docs/index.html && ls /var/www/pay/skills/pay/SKILL.md && echo '--- deploy OK'"
 
       - name: Smoke test
         run: |
           sleep 3
           echo "Checking docs page loads..."
           curl -sf https://pay-skill.com/docs/ | grep -q '<title>' || { echo "FAIL: docs page not loading"; exit 1; }
+          echo "Checking SKILL.md serves..."
+          curl -sf https://pay-skill.com/skills/pay/SKILL.md | grep -q 'name: pay' || { echo "FAIL: SKILL.md not loading"; exit 1; }
           echo "--- smoke test passed"
