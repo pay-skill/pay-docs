@@ -80,6 +80,7 @@ export default defineConfig({
       {
         text: "Quickstarts",
         items: [
+          { text: "Claude Desktop", link: "/quickstart/claude-desktop" },
           { text: "Direct Payment", link: "/quickstart/direct" },
           { text: "Tab Lifecycle", link: "/quickstart/tab" },
           { text: "x402 Direct", link: "/quickstart/x402-direct" },
