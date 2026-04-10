@@ -94,6 +94,11 @@ export default defineConfig({
       },
     ],
 
+    footer: {
+      message: "Payment infrastructure for AI agents.",
+      copyright: "Copyright &copy; 2026 Agent Payment Protocol Infrastructure Inc.",
+    },
+
     socialLinks: [
       { icon: "github", link: "https://github.com/pay-skill" },
     ],
