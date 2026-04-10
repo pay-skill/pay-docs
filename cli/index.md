@@ -7,7 +7,7 @@
 brew install pay-skill/tap/pay
 
 # Scoop (Windows)
-scoop bucket add pay-skill https://github.com/pay-skill/scoop-pay
+scoop bucket add pay-skill https://github.com/pay-skill/scoop-bucket
 scoop install pay
 
 # From source
@@ -179,14 +179,6 @@ pay tab close <TAB_ID>
 
 Either agent or provider can close. On close: 99% of charged amount goes to provider, 1% fee, remainder returns to agent.
 
-#### tab get
-
-Get details of a specific tab.
-
-```bash
-pay tab get <TAB_ID>
-```
-
 #### tab list
 
 List all tabs.
@@ -255,8 +247,8 @@ pay webhook register https://example.com/hooks --events all --secret "my-secret"
 
 | Flag | Description |
 |------|-------------|
-| `--events <LIST>` | **Required.** Comma-separated event filter, or `all` |
-| `--secret <SECRET>` | HMAC signing secret (auto-generated if omitted) |
+| `--events <LIST>` | Comma-separated event filter (default: `tab.opened,tab.closed,tab.topped_up,payment.completed`) |
+| `--secret <SECRET>` | HMAC signing secret. **Always set a unique value** — the default is insecure |
 
 Available events: `tab.opened`, `tab.low_balance`, `tab.closing_soon`, `tab.closed`, `tab.topped_up`, `payment.completed`, `x402.settled`
 
@@ -272,15 +264,15 @@ pay webhook list
 pay webhook delete <WEBHOOK_ID>
 ```
 
-### sign
+### sign (internal)
 
-Subprocess signer protocol for SDKs. Reads a 32-byte hex hash from stdin, writes a 65-byte signature to stdout.
+Subprocess signer protocol for SDKs. Hidden from `--help` but functional. Reads a 32-byte hex hash from stdin, writes a 65-byte signature to stdout.
 
 ```bash
 echo "0xabcdef..." | pay sign
 ```
 
-Used internally by SDK CLI signers. Uses the unified signer resolution chain: OS keychain → encrypted file → `PAYSKILL_SIGNER_KEY` env var.
+Used internally by SDK CLI signers. Key resolution: `PAYSKILL_SIGNER_KEY` env var → OS keychain → encrypted `.enc` file.
 
 ### mint
 
@@ -294,15 +286,22 @@ Rate limited to 1 mint per wallet per hour.
 
 ### fund
 
-Open funding page to add USDC.
+Generate a funding link. The operator opens the link in a browser to deposit USDC via Coinbase Onramp or direct transfer. Link expires in 1 hour.
 
 ```bash
 pay fund
+pay fund -m "Need $50 for weather API calls"
+pay fund -m "Task will complete in ~5 min" --name "Claude Code"
 ```
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--message` | `-m` | Message shown to the operator (repeatable) |
+| `--name` | — | Agent display name on the funding page |
 
 ### withdraw
 
-Withdraw USDC to an external address.
+Generate a withdrawal link. The operator opens the link in a browser to complete the withdrawal.
 
 ```bash
 pay withdraw 0xRecipient 10.00
@@ -421,6 +420,46 @@ pay key init --write-env
 
 Outputs the private key in hex. For production, use `pay init` instead.
 
+### update
+
+Self-update the CLI binary. Checks GitHub Releases for the latest version, downloads the matching platform binary, and replaces the current executable.
+
+```bash
+pay update                  # Check and install latest version
+pay update --check          # Check only (exit 0 = up-to-date, exit 1 = outdated)
+pay update -y               # Skip confirmation prompt
+```
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--check` | — | Only check, don't install |
+| `--yes` | `-y` | Skip confirmation (auto-yes in non-TTY) |
+
+Auto-detects package managers (brew, scoop, choco, snap) and delegates to them if the CLI was installed via one.
+
+### completions
+
+Generate shell completion scripts.
+
+```bash
+pay completions bash > ~/.bash_completion.d/pay
+pay completions zsh > ~/.zfunc/_pay
+pay completions fish > ~/.config/fish/completions/pay.fish
+pay completions powershell > pay.ps1
+```
+
+Supported shells: `bash`, `zsh`, `fish`, `powershell`, `elvish`.
+
+---
+
+## Command Aliases
+
+| Alias | Command |
+|-------|---------|
+| `pay send` | `pay direct` |
+| `pay balance` | `pay status` |
+| `pay req` | `pay request` |
+
 ---
 
 ## Signer Modes
@@ -439,7 +478,7 @@ The Pay signer is always priority #1. OWS only activates when the `ows` CLI is i
 
 | Variable | Description |
 |----------|-------------|
-| `PAYSKILL_SIGNER_KEY` | Unlock Pay's encrypted signer |
+| `PAYSKILL_SIGNER_KEY` | Raw hex private key (highest priority signer) |
 | `OWS_WALLET_ID` | OWS wallet name for SDK auto-detection |
 | `OWS_API_KEY` | OWS API key for policy-gated signing |
 | `PAYSKILL_KEY` | Raw private key (dev/testing only) |
