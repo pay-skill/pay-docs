@@ -7,6 +7,7 @@ export default defineConfig({
   cleanUrls: true,
 
   head: [
+    ["link", { rel: "icon", href: "/favicon.ico" }],
     ["meta", { property: "og:title", content: "Pay — Payments for AI Agents" }],
     [
       "meta",
