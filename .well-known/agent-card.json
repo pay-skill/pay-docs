@@ -1,0 +1,40 @@
+{
+  "name": "pay",
+  "description": "USDC payment agent for AI systems on Base",
+  "url": "https://pay-skill.com",
+  "provider": {
+    "organization": "pay-skill"
+  },
+  "version": "0.1.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "skills": [
+    {
+      "id": "direct-payment",
+      "name": "Direct Payment",
+      "description": "Send one-shot USDC payment to any address"
+    },
+    {
+      "id": "tab-management",
+      "name": "Tab Management",
+      "description": "Open, charge, close, and top-up pre-funded metered tabs"
+    },
+    {
+      "id": "x402-request",
+      "name": "x402 HTTP Request",
+      "description": "Make HTTP requests with automatic 402 payment handling"
+    },
+    {
+      "id": "discover",
+      "name": "Service Discovery",
+      "description": "Search for paid API services in the pay catalog"
+    }
+  ],
+  "authentication": {
+    "schemes": ["EIP-712"]
+  },
+  "defaultInputMimeType": "application/json",
+  "defaultOutputMimeType": "application/json"
+}
