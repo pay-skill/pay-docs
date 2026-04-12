@@ -3,142 +3,178 @@
 ## Installation
 
 ```bash
-pip install payskill
+pip install pay-skill
+```
+
+Optional keychain support (reads key stored by `pay` CLI):
+
+```bash
+pip install pay-skill[keychain]
 ```
 
 Requires Python 3.10+.
 
-::: warning Amount Units
-**All amounts are micro-USDC** (6 decimals). $1.00 = 1,000,000. $5.00 = 5,000,000. Do not pass dollar amounts — `pay_direct("0x...", 5)` sends $0.000005.
-:::
-
 ## Quick Start
 
 ```python
-import httpx
-from payskill import PayClient
+from payskill import Wallet
 
-# Fetch contract addresses — never hardcode these (see /contracts)
-contracts = httpx.get("https://pay-skill.com/api/v1/contracts").json()
-
-client = PayClient(
-    api_url="https://pay-skill.com/api/v1",
-    signer="raw",
-    private_key="0xabc...",
-    chain_id=contracts["chain_id"],
-    router_address=contracts["router"],
-)
+wallet = Wallet()  # reads PAYSKILL_KEY env var
 
 # Send $5 to a provider
-result = client.pay_direct("0xProvider...", 5_000_000, memo="invoice-42")
+result = wallet.send("0xProvider...", 5.0, memo="invoice-42")
 print(result.tx_hash)
+
+# Open a metered tab
+tab = wallet.open_tab("0xProvider...", 20.0, max_charge_per_call=2.0)
+
+# Paid HTTP (x402 handled automatically)
+response = wallet.request("https://api.example.com/data")
 ```
 
-## PayClient
-
-### Constructor
+## Wallet Initialization
 
 ```python
-from payskill import PayClient
+from payskill import Wallet
 
-client = PayClient(
-    api_url="https://pay-skill.com/api/v1",
-    signer="raw",               # "cli", "raw", or "custom"
-    private_key="0xabc...",     # Required for "raw" mode
-    chain_id=8453,              # Base mainnet
-    router_address="0x...",     # PayRouter contract
-)
+# Zero-config (reads PAYSKILL_KEY env var)
+wallet = Wallet()
+
+# Explicit key
+wallet = Wallet(private_key="0xabc...")
+
+# OS keychain (reads key stored by `pay` CLI) — tries keychain first, then env
+wallet = Wallet.create()
+
+# Env var only
+wallet = Wallet.from_env()
+
+# Testnet (Base Sepolia)
+wallet = Wallet(testnet=True)
+# or set PAYSKILL_TESTNET=1
+
+# OWS (Open Wallet Standard)
+wallet = Wallet.from_ows(wallet_id="my-agent")
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `api_url` | `str` | `https://pay-skill.com/api/v1` | Pay API base URL |
-| `signer` | `str \| Signer` | `"cli"` | Signer mode or instance |
-| `private_key` | `str \| None` | `None` | Private key for raw signer |
-| `chain_id` | `int \| None` | `None` | EIP-712 domain chain ID |
-| `router_address` | `str \| None` | `None` | EIP-712 domain contract |
+| `private_key` | `str` | `PAYSKILL_KEY` env | Agent's secp256k1 private key |
+| `testnet` | `bool` | `False` | Use Base Sepolia testnet |
+| `timeout` | `float` | `30.0` | Request timeout in seconds |
 
 Supports context manager:
 
 ```python
-with PayClient(private_key="0x...") as client:
-    client.pay_direct("0xProvider", 5_000_000)
+with Wallet(private_key="0x...") as wallet:
+    wallet.send("0xProvider", 5.0)
 ```
 
-### Direct Payment
+### Properties
 
 ```python
-result = client.pay_direct(
-    to="0xProviderAddress",     # Recipient wallet
-    amount=5_000_000,           # $5.00 in micro-USDC
-    memo="invoice-42",          # Optional metadata
+wallet.address  # "0x1234..." (derived from private key, read-only)
+```
+
+## Amounts
+
+Dollar amounts by default. Use `{"micro": int}` for micro-USDC precision:
+
+```python
+wallet.send("0x...", 5.0)                    # $5.00
+wallet.send("0x...", 0.01)                   # $0.01
+wallet.send("0x...", {"micro": 5_000_000})   # $5.00 (exact micro-USDC)
+```
+
+| Dollars | Micro-USDC |
+|---------|-----------|
+| $1.00 | 1,000,000 |
+| $5.00 | 5,000,000 |
+| $0.01 | 10,000 |
+
+---
+
+## Direct Payment
+
+```python
+result = wallet.send(
+    "0xProviderAddress",   # Recipient
+    5.0,                   # Amount ($5.00)
+    memo="invoice-42",     # Optional
 )
-# => DirectPaymentResult(tx_hash="0xabc...", status="confirmed", amount=5000000, fee=50000)
+# => SendResult(tx_hash="0xabc...", status="confirmed", amount=5.0, fee=0.05)
 ```
 
-- **Minimum:** 1,000,000 ($1.00)
-- **Fee:** 1% deducted from provider payout (0.75% for providers above $50k/month volume)
-- **Permit:** Auto-signed (EIP-2612 approval to PayDirect contract)
+- **Minimum:** $1.00
+- **Fee:** 1% deducted from provider payout (0.75% above $50k/month)
+- **Permit:** Auto-signed internally (EIP-2612)
 
-### Tab Management
+## Tab Management
 
-#### Open a Tab
+### Open a Tab
 
 ```python
-tab = client.open_tab(
-    provider="0xProviderAddress",
-    amount=20_000_000,              # Lock $20.00
-    max_charge_per_call=2_000_000,  # Max $2.00 per charge
+tab = wallet.open_tab(
+    "0xProviderAddress",     # Provider wallet
+    20.0,                    # Lock $20.00
+    max_charge_per_call=2.0, # Max $2.00 per charge
 )
-# => Tab(tab_id="abc123", status="open", balance_remaining=19900000)
+# => Tab(id="abc123", amount=20.0, status="open", ...)
 ```
 
-- **Minimum:** 5,000,000 ($5.00)
-- **Activation fee:** `max($0.10, 1% of amount)` — non-refundable
+- **Minimum:** $5.00
+- **Activation fee:** `max($0.10, 1% of amount)` -- non-refundable
 
-#### Top Up a Tab
+### Charge a Tab (Provider-Side)
 
 ```python
-tab = client.top_up_tab("abc123", 10_000_000)  # Add $10.00
+charge = provider_wallet.charge_tab(tab_id, 1.0)  # Charge $1.00
+# => ChargeResult(charge_id="chg-1", status="buffered")
 ```
 
-#### Close a Tab
+### Top Up
 
 ```python
-tab = client.close_tab("abc123")
-# => Tab(status="closed")
+tab = wallet.top_up_tab(tab_id, 10.0)  # Add $10.00
 ```
 
-Either agent or provider can close unilaterally. On close:
-- `total_charged × 0.99` goes to provider (×0.9925 for high-volume)
-- `total_charged × 0.01` goes to fee wallet (×0.0075 for high-volume)
+### Close
+
+```python
+tab = wallet.close_tab(tab_id)
+# => Tab(status="closed", ...)
+```
+
+Either agent or provider can close. On close:
+- `total_charged x 0.99` goes to provider
+- `total_charged x 0.01` goes to fee wallet
 - Remainder returns to agent
 
-See the [Tab Quickstart](/quickstart/tab#fees) for the full fee breakdown.
-
-#### List and Get Tabs
+### List and Get
 
 ```python
-tabs = client.list_tabs()                # All tabs
-tab = client.get_tab("abc123")           # Single tab
+tabs = wallet.list_tabs()
+tab = wallet.get_tab("abc123")
 ```
 
-### x402 Request Handling
+## x402 Payments
 
 ```python
-response = client.request("https://api.example.com/data")
+response = wallet.request("https://api.example.com/data")
 ```
 
 If the upstream returns **402 Payment Required**, the SDK automatically:
 
-1. Decodes the `PAYMENT-REQUIRED` header (base64 -> JSON), reads `accepts[0].extra.settlement`, `accepts[0].amount`, and `accepts[0].payTo`
-2. If `settlement == "tab"`: finds or opens a tab, charges it, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing tab proof in `extensions.pay`
-3. If `settlement == "direct"`: signs an EIP-3009 `transferWithAuthorization`, retries with `PAYMENT-SIGNATURE: base64(v2 PaymentPayload)` containing the signed authorization in `payload`
+1. Parses the `PAYMENT-REQUIRED` header or response body
+2. Routes by settlement mode:
+   - **direct:** signs EIP-3009 TransferWithAuthorization, retries with `PAYMENT-SIGNATURE`
+   - **tab:** finds or auto-opens a tab, charges it, retries with tab proof
+3. Returns the final response (httpx.Response)
 
 Options:
 
 ```python
-response = client.request(
+response = wallet.request(
     "https://api.example.com/data",
     method="POST",
     body={"query": "..."},
@@ -146,97 +182,65 @@ response = client.request(
 )
 ```
 
-### Status
+## Balance and Status
 
 ```python
-status = client.get_status()
-# => StatusResponse(wallet="0x...", balance_usdc="142500000", open_tabs=2)
+bal = wallet.balance()
+# => Balance(total=142.50, locked=20.0, available=122.50)
 
-status.address    # "0x..." (alias for wallet)
-status.balance    # 142500000 (micro-USDC as int)
+status = wallet.status()
+# => Status(address="0x...", balance=Balance(...), open_tabs=2)
 ```
 
-### Webhooks
+## Discovery
 
 ```python
-# Register
-hook = client.register_webhook(
-    url="https://example.com/hooks",
-    events=["payment.completed", "tab.opened"],  # Optional filter
-    secret="my-hmac-secret",                       # Optional HMAC key
+# Instance method
+services = wallet.discover("weather")
+
+# Standalone (no wallet needed)
+from payskill import discover
+services = discover("weather", testnet=True)
+```
+
+## Fund and Withdraw Links
+
+```python
+fund_url = wallet.create_fund_link(message="Need funds")
+withdraw_url = wallet.create_withdraw_link()
+```
+
+Links expire after 1 hour.
+
+## Webhooks
+
+```python
+hook = wallet.register_webhook(
+    "https://example.com/hooks",
+    events=["payment.completed", "tab.opened"],
+    secret="my-hmac-secret",
 )
 # => WebhookRegistration(id="hook-123", url="...", events=[...])
 
-# List
-hooks = client.list_webhooks()
-
-# Delete
-client.delete_webhook("hook-123")
+hooks = wallet.list_webhooks()
+wallet.delete_webhook("hook-123")
 ```
 
-### Fund and Withdraw Links
+## Testnet Minting
 
 ```python
-fund_url = client.create_fund_link()
-# => "https://pay-skill.com/fund?token=abc123"
-
-withdraw_url = client.create_withdraw_link()
-# => "https://pay-skill.com/withdraw?token=abc123"
+result = wallet.mint(100)  # Mint $100 testnet USDC
+# => MintResult(tx_hash="0x...", amount=100.0)
 ```
 
-Links expire after **1 hour**, or **4 hours** after first access.
-
-```python
-# With options
-fund_url = client.create_fund_link(
-    agent_name="my-agent",
-    messages=[{"role": "system", "content": "Fund request"}],
-)
-```
-
----
-
-## Signer Modes
-
-### CLI Signer (Default)
-
-Delegates signing to the `pay sign` CLI subprocess:
-
-```python
-client = PayClient(signer="cli")
-```
-
-### Raw Key Signer
-
-Uses `eth_account` for direct signing. Best for development:
-
-```python
-client = PayClient(signer="raw", private_key="0xabc...")
-```
-
-Or via environment variable `PAYSKILL_KEY`.
-
-### Custom Callback Signer
-
-Provide your own signing function:
-
-```python
-from payskill.signer import CallbackSigner
-
-signer = CallbackSigner(
-    callback=lambda hash_bytes: your_signing_function(hash_bytes),
-    address="0xYourAddress",
-)
-client = PayClient(signer=signer)
-```
+Only works when `testnet=True` or `PAYSKILL_TESTNET=1`.
 
 ---
 
 ## Error Handling
 
 ```python
-from payskill import PayClient
-from payskill.errors import (
+from payskill import (
     PayError,
     PayValidationError,
     PayServerError,
@@ -245,101 +249,96 @@ from payskill.errors import (
 )
 
 try:
-    client.pay_direct("0xProvider", 5_000_000)
+    wallet.send("0xProvider", 5.0)
+except PayInsufficientFundsError as e:
+    print(e.balance, e.required)
+    url = wallet.create_fund_link(message="Need funds")
 except PayValidationError as e:
-    # Client-side validation failed (bad address, below minimum)
-    print(e.field)  # e.g., "to", "amount"
+    print(e.field)
 except PayServerError as e:
-    # Server returned an error
-    print(e.status_code)  # e.g., 402, 500
+    print(e.status_code)
 except PayNetworkError:
-    # Connection error
-    pass
+    print("Server unreachable")
 ```
 
-| Error Class | When |
-|-------------|------|
-| `PayValidationError` | Invalid address, amount below minimum |
-| `PayServerError` | Server returned 4xx/5xx |
-| `PayNetworkError` | Connection failed |
-| `PayInsufficientFundsError` | Not enough USDC |
+| Error Class | Code | When |
+|-------------|------|------|
+| `PayValidationError` | `validation_error` | Invalid address, amount below minimum |
+| `PayServerError` | `server_error` | Server returned 4xx/5xx |
+| `PayNetworkError` | `network_error` | Connection failed |
+| `PayInsufficientFundsError` | `insufficient_funds` | Not enough USDC |
 
 ---
 
-## Data Models
-
-All models use [Pydantic](https://docs.pydantic.dev/) for validation and serialization.
+## Types
 
 ```python
-class DirectPaymentResult(BaseModel):
-    payment_id: str
-    tx_hash: str | None       # On-chain transaction hash
-    status: str               # "confirmed"
-    amount: int               # Micro-USDC sent
-    fee: int                  # Micro-USDC fee deducted
+@dataclass
+class SendResult:
+    tx_hash: str
+    status: str
+    amount: float    # Dollars
+    fee: float       # Dollars
 
-class Tab(BaseModel):
-    tab_id: str
+@dataclass
+class Tab:
+    id: str
     provider: str
-    amount: int                  # Total locked (micro-USDC)
-    balance_remaining: int       # Remaining balance
-    total_charged: int
+    amount: float              # Dollars
+    balance_remaining: float
+    total_charged: float
     charge_count: int
-    max_charge_per_call: int
-    total_withdrawn: int
-    status: str                  # "open" | "closed"
-    auto_close_after: str | None
-    pending_charge_count: int    # Buffered charges not yet settled
-    pending_charge_total: int    # Pending amount (micro-USDC)
-    effective_balance: int       # balance_remaining - pending_charge_total
+    max_charge_per_call: float
+    total_withdrawn: float
+    status: str                # "open" | "closed"
+    pending_charge_count: int
+    pending_charge_total: float
+    effective_balance: float
 
-class StatusResponse(BaseModel):
-    wallet: str
-    balance_usdc: str | None  # Decimal string
+@dataclass
+class Balance:
+    total: float       # Dollars
+    locked: float
+    available: float
+
+@dataclass
+class Status:
+    address: str
+    balance: Balance
     open_tabs: int
-    total_locked: int
 
-class WebhookRegistration(BaseModel):
+@dataclass
+class WebhookRegistration:
     id: str
     url: str
     events: list[str]
+
+@dataclass
+class MintResult:
+    tx_hash: str
+    amount: float    # Dollars
 ```
 
 ---
 
 ## Authentication
 
-All `/api/v1/*` requests include EIP-712 signed headers:
+All API requests are automatically signed with EIP-712 auth headers. No manual signing needed.
+
+For advanced use, auth headers include:
 
 | Header | Value |
 |--------|-------|
-| `X-Pay-Agent` | Wallet address |
+| `X-Pay-Agent` | Wallet address (checksummed) |
 | `X-Pay-Signature` | EIP-712 signature (hex, 65 bytes) |
 | `X-Pay-Timestamp` | Unix timestamp (seconds) |
 | `X-Pay-Nonce` | Random 32-byte hex |
 
-Helper functions for manual signing:
+Low-level helpers are still available:
 
 ```python
-from payskill import build_auth_headers, derive_address
+from payskill.auth import build_auth_headers, derive_address
 
-headers = build_auth_headers(
-    private_key="0xabc...",
-    method="POST",
-    path="/api/v1/direct",
-    chain_id=8453,
-    router_address="0x...",
-)
-
-address = derive_address("0xabc...")  # => "0x1234..."
+headers = build_auth_headers("0xabc...", "POST", "/api/v1/direct", 8453, "0xRouter...")
+address = derive_address("0xabc...")
 ```
-
-### Amount Units
-
-All amounts are in **USDC micro-units** (6 decimals):
-
-| Dollars | Micro-USDC |
-|---------|-----------|
-| $1.00 | 1,000,000 |
-| $5.00 | 5,000,000 |
-| $0.01 | 10,000 |
