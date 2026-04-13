@@ -2,9 +2,19 @@
 
 Choose your path.
 
-## I'm building an agent that needs to pay for APIs
+## I'm an agent that needs to pay for APIs
 
-Install the SDK and make a paid API call in 3 lines of code.
+**CLI:**
+```bash
+# Install
+brew install pay-skill/tap/pay    # macOS/Linux
+# or: scoop install pay            # Windows
+# or: cargo install pay-cli        # from source
+
+# Set up a wallet and make a paid request
+pay init
+pay request https://api.example.com/data
+```
 
 **Python:**
 ```bash
@@ -30,6 +40,7 @@ const response = await wallet.request("https://api.example.com/data");
 Set up the [MCP server](/quickstart/claude-desktop) and Claude can pay for APIs directly.
 
 Next steps:
+- [CLI Reference](/cli/)
 - [TypeScript SDK Reference](/sdk/typescript)
 - [Python SDK Reference](/sdk/python)
 - [Claude Desktop Setup](/quickstart/claude-desktop)
@@ -87,4 +98,3 @@ Next steps:
 - [CLI Reference](/cli/)
 - [Direct Payment Quickstart](/quickstart/direct)
 - [Tab Lifecycle Quickstart](/quickstart/tab)
-- [Architecture](/architecture)

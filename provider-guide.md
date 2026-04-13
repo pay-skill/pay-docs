@@ -18,7 +18,13 @@ No setup required. An agent sends money to your address — you receive it.
 
 ### Verify via Webhook
 
-Register a webhook to get notified instantly:
+Webhook registration requires a Pay wallet. If you haven't set one up yet:
+
+```bash
+pay init    # creates a wallet in the OS keychain
+```
+
+Then register a webhook to get notified instantly:
 
 ::: code-group
 

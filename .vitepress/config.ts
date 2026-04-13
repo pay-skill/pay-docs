@@ -30,7 +30,6 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: "Getting Started", link: "/" },
-      { text: "Architecture", link: "/architecture" },
       { text: "CLI", link: "/cli/" },
       { text: "pay-gate", link: "/gate/" },
       { text: "API Reference", link: "/api-reference" },
@@ -54,7 +53,6 @@ export default defineConfig({
         text: "Getting Started",
         items: [
           { text: "Introduction", link: "/" },
-          { text: "Architecture", link: "/architecture" },
           { text: "Contracts & Networks", link: "/contracts" },
           { text: "Framework Integrations", link: "/integrations" },
         ],

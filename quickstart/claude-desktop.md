@@ -6,9 +6,10 @@ Add Pay to Claude Desktop so Claude can make USDC payments, discover paid APIs, 
 
 Add to your Claude Desktop config file:
 
-::: code-group
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
-```json [macOS ~/Library/Application Support/Claude/claude_desktop_config.json]
+```json
 {
   "mcpServers": {
     "pay": {
@@ -18,19 +19,6 @@ Add to your Claude Desktop config file:
   }
 }
 ```
-
-```json [Windows %APPDATA%\Claude\claude_desktop_config.json]
-{
-  "mcpServers": {
-    "pay": {
-      "command": "npx",
-      "args": ["-y", "@pay-skill/mcp"]
-    }
-  }
-}
-```
-
-:::
 
 Restart Claude Desktop after saving. A wallet is auto-generated and stored in the OS keychain on first run. Mainnet by default.
 
