@@ -173,6 +173,33 @@ const response = await wallet.request("https://api.example.com/data", {
 });
 ```
 
+### fetch() Wrapper
+
+Inject x402 into **any SDK** that accepts a custom `fetch`:
+
+```typescript
+import { Wallet, createPayFetch } from "@pay-skill/sdk";
+import OpenAI from "openai";
+
+const wallet = await Wallet.create();
+const payFetch = createPayFetch(wallet, { maxTotal: 50.00 });
+
+const openai = new OpenAI({ fetch: payFetch });
+// Every API call now auto-pays via x402
+```
+
+Or patch `globalThis.fetch` for the entire process:
+
+```typescript
+import { Wallet, register } from "@pay-skill/sdk";
+
+const wallet = await Wallet.create();
+const unregister = register(wallet);
+// fetch() globally handles 402 now
+```
+
+See the full [fetch() Wrapper guide](/docs/sdk/fetch) for budget controls, SDK injection examples, and the `onPayment` callback.
+
 ## Balance and Status
 
 ```typescript
@@ -259,6 +286,7 @@ try {
 | `PayServerError` | `server_error` | Server returned 4xx/5xx |
 | `PayNetworkError` | `network_error` | Connection failed |
 | `PayInsufficientFundsError` | `insufficient_funds` | Not enough USDC |
+| `PayBudgetExceededError` | `budget_exceeded` | `createPayFetch` budget limit hit |
 
 ---
 
