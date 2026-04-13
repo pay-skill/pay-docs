@@ -98,7 +98,7 @@ with full x402 v2 payment requirements for every paid route:
         "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         "payTo": "0xprovider...",
         "maxTimeoutSeconds": 60,
-        "extra": { "settlement": "tab" }
+        "extra": { "settlement": "tab", "facilitator": "https://pay-skill.com/x402" }
       }
     }
   ]

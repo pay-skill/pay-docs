@@ -388,7 +388,7 @@ GET /api/v1/premium/data
     "x402Version": 2,
     "accepts": [{ "scheme": "exact", "amount": "10000",
       "payTo": "0xprovider...", "network": "eip155:8453",
-      "extra": { "settlement": "tab" } }]
+      "extra": { "settlement": "tab", "facilitator": "https://pay-skill.com/x402" } }]
   })
 ```
 
