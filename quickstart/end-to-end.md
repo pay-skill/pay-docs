@@ -197,7 +197,6 @@ Provider receives: $0.04 * 0.99 = $0.0396 (1% processing fee deducted).
 
 ## Next Steps
 
-- [Architecture](/architecture) -- how the full system connects
 - [pay-gate Configuration](/gate/config) -- per-route pricing, settlement modes
 - [Tab Lifecycle](/quickstart/tab) -- detailed tab mechanics
 - [Webhooks](/webhooks) -- event notifications for providers
