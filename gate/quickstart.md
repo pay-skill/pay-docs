@@ -1,6 +1,6 @@
 ---
-title: "Ᵽay-gate Quick Start — Deploy an x402 Payment Gateway"
-description: "Deploy Ᵽay-gate as a Cloudflare Worker, Rust binary, Docker container, or sidecar. Add x402 payment gating to your API in minutes."
+title: "pay-gate Quick Start — Deploy an x402 Payment Gateway"
+description: "Deploy pay-gate as a Cloudflare Worker, Rust binary, Docker container, or sidecar. Add x402 payment gating to your API in minutes."
 ---
 
 # Quick Start

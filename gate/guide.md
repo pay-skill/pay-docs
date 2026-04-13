@@ -1,9 +1,9 @@
 ---
-title: "Ᵽay-gate Implementation Guide — Zero to Production"
-description: "End-to-end guide for deploying Ᵽay-gate. Provider setup, route pricing, settlement modes, testing, and production deployment."
+title: "pay-gate Implementation Guide — Zero to Production"
+description: "End-to-end guide for deploying pay-gate. Provider setup, route pricing, settlement modes, testing, and production deployment."
 ---
 
-# Implementing Ᵽay-gate: End-to-End Guide
+# Implementing pay-gate: End-to-End Guide
 
 This guide walks through everything a provider needs to go from zero to a production pay-gate deployment. By the end, your HTTP API will accept USDC payments from AI agents — no changes to your backend code.
 

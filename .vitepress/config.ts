@@ -31,7 +31,7 @@ export default defineConfig({
     nav: [
       { text: "Getting Started", link: "/" },
       { text: "CLI", link: "/cli/" },
-      { text: "Ᵽay-gate", link: "/gate/" },
+      { text: "pay-gate", link: "/gate/" },
       { text: "API Reference", link: "/api-reference" },
       {
         text: "GitHub",
@@ -71,10 +71,10 @@ export default defineConfig({
         text: "For Providers",
         items: [
           { text: "Provider Guide", link: "/provider-guide" },
-          { text: "Ᵽay-gate Overview", link: "/gate/" },
-          { text: "Ᵽay-gate Quick Start", link: "/gate/quickstart" },
-          { text: "Ᵽay-gate Configuration", link: "/gate/config" },
-          { text: "Ᵽay-gate Guide", link: "/gate/guide" },
+          { text: "pay-gate Overview", link: "/gate/" },
+          { text: "pay-gate Quick Start", link: "/gate/quickstart" },
+          { text: "pay-gate Configuration", link: "/gate/config" },
+          { text: "pay-gate Guide", link: "/gate/guide" },
           { text: "Webhooks", link: "/webhooks" },
         ],
       },

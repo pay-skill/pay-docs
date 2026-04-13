@@ -1,6 +1,6 @@
 ---
-title: "Ᵽay-gate Configuration Reference"
-description: "Complete configuration reference for Ᵽay-gate. Route pricing, settlement modes, provider address, facilitator URL, and proxy settings."
+title: "pay-gate Configuration Reference"
+description: "Complete configuration reference for pay-gate. Route pricing, settlement modes, provider address, facilitator URL, and proxy settings."
 ---
 
 # Configuration
