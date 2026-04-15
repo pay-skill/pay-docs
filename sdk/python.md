@@ -187,6 +187,29 @@ response = wallet.request(
 )
 ```
 
+## fetch() Wrapper
+
+For automatic x402 handling on any HTTP call, use `create_pay_fetch`:
+
+```python
+from payskill import Wallet, create_pay_fetch
+
+wallet = Wallet.create()
+pay = create_pay_fetch(wallet, max_per_request=1.00, max_total=50.00)
+
+# Direct call -- auto-pays any 402
+resp = pay("https://api.example.com/data")
+
+# With httpx.Client -- inject into any SDK
+import httpx
+client = httpx.Client(transport=pay.transport())
+resp = client.get("https://api.example.com/data")
+```
+
+Budget limits throw `PayBudgetExceededError`. Track cumulative spend via `pay.total_spent`.
+
+See the [fetch() wrapper guide](/sdk/fetch) for SDK injection examples and full API.
+
 ## Balance and Status
 
 ```python
@@ -251,6 +274,7 @@ from payskill import (
     PayServerError,
     PayNetworkError,
     PayInsufficientFundsError,
+    PayBudgetExceededError,
 )
 
 try:
@@ -258,6 +282,8 @@ try:
 except PayInsufficientFundsError as e:
     print(e.balance, e.required)
     url = wallet.create_fund_link(message="Need funds")
+except PayBudgetExceededError as e:
+    print(e.limit_type, e.spent, e.requested)
 except PayValidationError as e:
     print(e.field)
 except PayServerError as e:
@@ -272,6 +298,7 @@ except PayNetworkError:
 | `PayServerError` | `server_error` | Server returned 4xx/5xx |
 | `PayNetworkError` | `network_error` | Connection failed |
 | `PayInsufficientFundsError` | `insufficient_funds` | Not enough USDC |
+| `PayBudgetExceededError` | `budget_exceeded` | Payment exceeds spending limit (fetch wrapper) |
 
 ---
 
@@ -322,6 +349,12 @@ class WebhookRegistration:
 class MintResult:
     tx_hash: str
     amount: float    # Dollars
+
+@dataclass
+class PaymentEvent:
+    url: str          # URL that required payment
+    amount: float     # Dollars paid
+    settlement: str   # "direct" or "tab"
 ```
 
 ---
