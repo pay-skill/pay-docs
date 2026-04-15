@@ -128,7 +128,7 @@ Sent when tab balance drops below 20% of the original amount.
 }
 ```
 
-Sent 24 hours before a tab with `auto_close_after` will be closed.
+Sent 24 hours before a tab auto-closes (tabs auto-close after 30 days of inactivity).
 
 ### tab.closed
 

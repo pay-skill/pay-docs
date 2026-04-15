@@ -208,7 +208,6 @@ Open a new tab (pre-funded spending account).
 | `amount` | `number` | Yes | Funding amount in micro-USDC. Minimum `5000000` ($5.00). |
 | `max_charge_per_call` | `number` | Yes | Maximum per-charge amount in micro-USDC |
 | `permit` | `object` | Yes | EIP-2612 permit for the funding amount |
-| `auto_close_after` | `number` | No | Auto-close after this many seconds |
 
 **Response**
 
