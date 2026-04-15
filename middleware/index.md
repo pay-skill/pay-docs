@@ -251,7 +251,7 @@ app.post("/api/summary", requirePayment({
 Each framework has a short guide covering installation, route-handler patterns, error handling, and CI-ready wiring:
 
 - [**Express guide**](/middleware/express) — `payMiddleware` and `requirePayment`, Express 4 and 5, error-handling middleware, cookbook routes.
-- **Next.js guide** — `withPay` and `withPaywall` for App Router route handlers, `dynamic = "force-dynamic"`, Vercel env vars.
+- [**Next.js guide**](/middleware/next) — `withPay` and `withPaywall` for App Router route handlers, `dynamic = "force-dynamic"`, Vercel env vars.
 - **FastAPI guide** — `PayMiddleware` (Starlette) and `require_payment` (Depends), dependency injection patterns, async handlers.
 
 See also [fetch() Wrapper](/sdk/fetch) for the underlying `createPayFetch` / `create_pay_fetch` API and [pay-gate](/gate/) for the reverse-proxy alternative to provider middleware.

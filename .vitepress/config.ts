@@ -85,8 +85,8 @@ export default defineConfig({
         items: [
           { text: "Overview", link: "/middleware/" },
           { text: "Express", link: "/middleware/express" },
-          // Per-framework guides added as they land (P27-17/18):
-          //   { text: "Next.js", link: "/middleware/next" },
+          { text: "Next.js", link: "/middleware/next" },
+          // Per-framework guides added as they land (P27-18):
           //   { text: "FastAPI", link: "/middleware/fastapi" },
         ],
       },
