@@ -81,6 +81,16 @@ export default defineConfig({
         ],
       },
       {
+        text: "Application Middleware",
+        items: [
+          { text: "Overview", link: "/middleware/" },
+          // Per-framework guides added as they land (P27-16/17/18):
+          //   { text: "Express", link: "/middleware/express" },
+          //   { text: "Next.js", link: "/middleware/next" },
+          //   { text: "FastAPI", link: "/middleware/fastapi" },
+        ],
+      },
+      {
         text: "Quickstarts",
         items: [
           { text: "Full Stack Tutorial", link: "/quickstart/end-to-end" },
