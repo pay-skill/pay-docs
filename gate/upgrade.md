@@ -114,12 +114,113 @@ them. Fields removed from the header (like `extra.facilitator` in
 v0.2.0) don't break existing agents because the `extra` object is
 optional and its contents are non-normative for payment verification.
 
+## v0.3.0: Info Block Replaces Hint (Breaking)
+
+v0.3.0 replaces the free-form `hint` field with a structured `info`
+block (Bazaar extension). This is a **breaking config change** --
+`hint` is no longer recognized.
+
+### Migration
+
+Before (v0.2.x):
+
+```yaml
+routes:
+  - path: "/api/v1/search"
+    price: "0.01"
+    hint: "?q={query}&limit=50"
+```
+
+After (v0.3.0):
+
+```yaml
+routes:
+  - path: "/api/v1/search"
+    price: "0.01"
+    info:
+      input:
+        type: "http"
+        method: "GET"
+        queryParams:
+          q:
+            type: "string"
+            required: true
+            description: "Search query"
+          limit:
+            type: "integer"
+            description: "Max results (default 50)"
+```
+
+For POST routes with JSON body hints:
+
+```yaml
+# Before
+hint: '{"start_date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD"}'
+
+# After
+info:
+  input:
+    type: "http"
+    method: "POST"
+    bodyType: "json"
+    body:
+      type: "object"
+      required: ["start_date", "end_date"]
+      properties:
+        start_date:
+          type: "string"
+          description: "YYYY-MM-DD"
+        end_date:
+          type: "string"
+          description: "YYYY-MM-DD"
+```
+
+### What Changed
+
+- `hint` field removed from route config
+- `info` block added -- structured Bazaar info (input type, params, body schema)
+- `route_template` field added -- named path params (e.g. `/users/:id`)
+- 402 responses include `extensions.bazaar` with info + auto-generated schema
+- `.well-known/x402` includes info blocks per endpoint
+- pay-gate validates inbound requests against info schema (post-payment, pre-proxy)
+- Invalid requests get 400 -- **payment is not refunded**
+
+### New: Route Templates
+
+For APIs with path parameters:
+
+```yaml
+routes:
+  - path: "/users/*"
+    route_template: "/users/:id"
+    price: "0.01"
+    info:
+      input:
+        type: "http"
+        method: "GET"
+        pathParams:
+          id:
+            type: "string"
+            required: true
+            description: "User ID"
+```
+
+### Validate Before Deploying
+
+```bash
+pay-gate validate --config pay-gate.yaml
+```
+
+The gate refuses to start with invalid info blocks (e.g. POST without
+`bodyType`, MCP without `tool`). Run validate after migrating.
+
 ## x402 Discovery Endpoint
 
 As of v0.2.0, every pay-gate instance serves
 `GET /.well-known/x402` -- the standard x402 descriptor from the IETF
 internet-draft. This endpoint is served automatically with no
-configuration needed.
+configuration needed. As of v0.3.0, this endpoint includes Bazaar
+info blocks for each route that has one configured.
 
 Providers should add a DNS TXT record for full discoverability:
 

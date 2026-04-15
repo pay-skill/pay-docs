@@ -273,18 +273,43 @@ routes:
   - path: "/api/v1/premium/*"
     method: "GET"
     price: "0.01"                  # $0.01 per call
-    hint: "?q={query}&limit=50"    # free-form hint for agents
+    info:
+      input:
+        type: "http"
+        method: "GET"
+        queryParams:
+          q:
+            type: "string"
+            required: true
+            description: "Search query"
+          limit:
+            type: "integer"
+            description: "Max results (default 50)"
 
   - path: "/api/v1/report"
     method: "POST"                 # match specific HTTP method
     price: "5.00"                  # $5.00 per call
-    hint: '{"start_date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD"}'
+    info:
+      input:
+        type: "http"
+        method: "POST"
+        bodyType: "json"
+        body:
+          type: "object"
+          required: ["start_date", "end_date"]
+          properties:
+            start_date:
+              type: "string"
+              description: "YYYY-MM-DD"
+            end_date:
+              type: "string"
+              description: "YYYY-MM-DD"
 
   - path: "/api/v1/health"
     free: true                     # no payment required
 ```
 
-The `hint` field is a free-form string that tells agents what parameters the route accepts. Query params, body examples, whatever helps an LLM construct the right request. For full API docs, point `docs_url` in your discovery config to an OpenAPI spec.
+The `info` block tells agents exactly what parameters a route accepts and what it returns. pay-gate includes this in 402 responses (under `extensions.bazaar`) and in `.well-known/x402`, so agents can construct valid requests before paying. pay-gate also validates inbound requests against the info block after payment — invalid requests get a 400 (payment is not refunded).
 
 ### Dynamic Pricing
 
@@ -295,7 +320,19 @@ routes:
   - path: "/api/v1/generate/*"
     price_endpoint: "http://localhost:8080/internal/pricing"
     settlement: "tab"
-    hint: '{"prompt": "string", "model": "gpt-4"}'
+    info:
+      input:
+        type: "http"
+        method: "POST"
+        bodyType: "json"
+        body:
+          type: "object"
+          required: ["prompt"]
+          properties:
+            prompt:
+              type: "string"
+            model:
+              type: "string"
 ```
 
 pay-gate calls your pricing endpoint with the request details:
@@ -388,7 +425,14 @@ GET /api/v1/premium/data
     "x402Version": 2,
     "accepts": [{ "scheme": "exact", "amount": "10000",
       "payTo": "0xprovider...", "network": "eip155:8453",
-      "extra": { "settlement": "tab", "facilitator": "https://pay-skill.com/x402" } }]
+      "extra": { "settlement": "tab", "facilitator": "https://pay-skill.com/x402" } }],
+    "extensions": {
+      "bazaar": {
+        "info": { "input": { "type": "http", "method": "GET",
+          "queryParams": { "q": { "type": "string", "required": true } } } },
+        "schema": { ... }
+      }
+    }
   })
 ```
 
