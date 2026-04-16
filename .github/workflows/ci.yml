@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build VitePress
+        run: npx vitepress build
+
+      - name: Link check (internal)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >
+            --no-progress
+            --exclude-all-private
+            --exclude 'localhost'
+            --exclude '127.0.0.1'
+            --exclude 'testnet.pay-skill.com'
+            --exclude 'pay-skill.com/api'
+            --exclude 'sepolia.base.org'
+            --exclude 'basescan.org'
+            --exclude 'github.com/pay-skill/pay-server'
+            --exclude 'github.com/pay-skill/pay-dashboard'
+            --include-fragments
+            '.vitepress/dist/**/*.html'
+          fail: true
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Python example syntax check
+        run: |
+          for f in examples/python/*.py; do
+            echo "Checking $f..."
+            python -m py_compile "$f"
+          done
+          echo "All Python examples pass syntax check"
