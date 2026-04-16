@@ -90,9 +90,9 @@ When reviewing tabs (`pay tab list`), flag any that appear idle:
 - Balance is nearly full (opened but barely used)
 - Provider is no longer being used
 
-Suggest closing idle tabs to free up the balance. Tabs also auto-close
-after a provider-configured inactivity period — the agent receives a
-`tab.closing_soon` webhook before this happens.
+Suggest closing idle tabs to free up the balance. Tabs auto-close
+after 30 days of inactivity — the agent receives a `tab.closing_soon`
+webhook before this happens.
 
 ## Multiple tabs with same provider
 

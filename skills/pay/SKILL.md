@@ -35,6 +35,7 @@ CLI: `pay`. Chain: Base. Token: USDC. Agents never hold ETH.
 ## Quick reference (covers 95% of cases)
 
 ```
+pay discover <query>                Find paid services by keyword/category
 pay request <url>                   x402 — hit a paywalled API (handles everything)
 pay direct <to> <amount>            Send USDC ($1 min)
 pay tab open <provider> <amount>    Open metered tab ($5 min, recommend $50)
@@ -43,8 +44,40 @@ pay tab topup <tab_id> <amount>     Add funds to open tab
 pay tab list                        List open tabs
 pay status                          Balance + open tabs
 pay fund                            Generate funding link (send to operator)
-pay discover <query>                Find paid services by keyword/category
 ```
+
+## Discover then request (most common flow)
+
+When a task needs an external service, always discover first:
+
+```bash
+pay discover "weather forecast"
+```
+
+Output (JSON, abbreviated):
+```json
+{
+  "services": [{
+    "name": "Acme Weather",
+    "base_url": "https://weather.acme.com",
+    "routes": [{"path": "/forecast", "price": "10000", "settlement": "tab"}],
+    "category": "data"
+  }]
+}
+```
+
+Construct the full URL from `base_url` + `routes[].path`, then request:
+
+```bash
+pay request "https://weather.acme.com/forecast?city=tokyo"
+```
+
+That's it. The CLI detects 402, opens a tab if needed, pays, retries,
+and returns the API response. The agent never touches payment details.
+
+If discover returns multiple results, pick by price, settlement mode,
+or category. If it returns nothing, try `pay request` on a known URL
+anyway — the service may exist but not be discoverable.
 
 ## Rules
 
@@ -72,15 +105,15 @@ handles authorization.
 First match wins.
 
 **Need a service but don't have a URL?**
-→ `pay discover "translation API"` — search the registry by keyword,
-  category, or settlement mode. Pick a result, then `pay request` its
-  URL. This is the default starting point when the task is "I need X."
-  See `references/discovery.md`.
+→ `pay discover` then `pay request` — see "Discover then request"
+  above. This is the default starting point when the task is "I need X."
+  Filters: `--category`, `--settlement`, `--sort`. Details in
+  `references/discovery.md`.
 
 **Got a URL to a paid API?**
-→ `pay request <url>` — handles 402 detection, payment, retry. Done.
-  Only works with providers using the Pay facilitator. If 402 points
-  to a different facilitator, this won't work — see `references/x402.md`.
+→ `pay request <url>` — skip discover, go straight to request. Handles
+  402 detection, payment, retry. Only works with providers using the Pay
+  facilitator. See `references/x402.md`.
 
 **Sending money to an address?**
 → `pay direct <to> <amount>` — one-shot transfer. $1 minimum.
