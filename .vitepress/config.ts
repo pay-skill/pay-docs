@@ -71,7 +71,9 @@ export default defineConfig({
       {
         text: "For Providers",
         items: [
+          { text: "Earn from AI Agents", link: "/earn" },
           { text: "Provider Guide", link: "/provider-guide" },
+          { text: "API Design Best Practices", link: "/api-design" },
           { text: "pay-gate Overview", link: "/gate/" },
           { text: "pay-gate Quick Start", link: "/gate/quickstart" },
           { text: "pay-gate Configuration", link: "/gate/config" },
