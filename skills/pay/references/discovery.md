@@ -22,8 +22,10 @@ Output is JSON by default. Use `--plain` for table format (columns: NAME, BASE U
    category, docs URL.
 
 2. **Facilitator indexes services.** Searchable catalog of active
-   pay-gate deployments. Services excluded from search after 48 hours
-   without heartbeat. Hard-deleted after 7 days.
+   pay-gate deployments. Services are also auto-cataloged from the
+   payment flow (when `base_url` is present in x402 settle requests).
+   Services excluded from search after 48 hours without heartbeat.
+   Hard-deleted after 7 days.
 
 3. **Agents query.** CLI (`pay discover`) or API
    (`GET /api/v1/discover?q=...`).
@@ -57,7 +59,10 @@ Query parameters:
 - `settlement` — "direct" or "tab"
 - `offset` (default 0), `limit` (default 50, max 100)
 
-Returns: name, description, base_url, category, keywords, routes, docs_url.
+Returns: name, description, base_url, category, keywords, routes (path,
+method, price, settlement), docs_url. Route summaries do not include
+full info blocks -- agents should hit `GET <base_url>/.well-known/x402`
+for detailed input/output descriptions.
 
 ## Volume tracking
 
@@ -73,10 +78,11 @@ No secrets. Useful for agents to inspect a known endpoint before paying.
 
 ## .well-known/x402 (IETF Draft)
 
-Each pay-gate instance serves `GET /.well-known/x402` — the standard
+Each pay-gate instance serves `GET /.well-known/x402` -- the standard
 x402 descriptor defined in the IETF internet-draft
 (`draft-jeftovic-x402-dns-discovery-00`). This returns a JSON object
-with full x402 v2 payment requirements for every paid route:
+with full x402 v2 payment requirements for every paid route, including
+Bazaar info blocks when configured:
 
 ```json
 {
@@ -90,7 +96,6 @@ with full x402 v2 payment requirements for every paid route:
       "method": "GET",
       "description": "Weather forecast data",
       "mimeType": "application/json",
-      "hint": "?q={city}",
       "paymentRequirements": {
         "scheme": "exact",
         "network": "eip155:8453",
@@ -99,14 +104,28 @@ with full x402 v2 payment requirements for every paid route:
         "payTo": "0xprovider...",
         "maxTimeoutSeconds": 60,
         "extra": { "settlement": "tab", "facilitator": "https://pay-skill.com/x402" }
-      }
+      },
+      "info": {
+        "input": {
+          "type": "http",
+          "method": "GET",
+          "queryParams": {
+            "q": { "type": "string", "required": true, "description": "City name" }
+          }
+        },
+        "output": { "type": "json", "example": { "city": "London", "temperature": 15 } }
+      },
+      "routeTemplate": "/api/v1/forecast"
     }
   ]
 }
 ```
 
-Agents can fetch this before making any requests to understand pricing
-and available endpoints without triggering a 402.
+Agents should fetch this before making requests to understand pricing,
+available endpoints, and required parameters without triggering a 402.
+The `info` block describes what the endpoint accepts (query params,
+body schema, path params) and what it returns. `routeTemplate` shows
+the URL pattern when path parameters are used (e.g. `/users/:id`).
 
 ## DNS TXT Discovery (Recommended)
 
