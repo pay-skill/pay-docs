@@ -388,8 +388,8 @@ HTTP/1.1 400 Bad Request
 
 ## Further reading
 
-- [Provider Guide](/docs/provider-guide) — how to accept payments
-- [pay-gate Configuration](/docs/gate/config) — full config reference
-- [pay-gate Guide](/docs/gate/guide) — end-to-end deployment
-- [Webhooks](/docs/webhooks) — webhook delivery and signing
-- [Earn from AI Agents](/docs/earn) — the catalog bounty program
+- [Provider Guide](/provider-guide) — how to accept payments
+- [pay-gate Configuration](/gate/config) — full config reference
+- [pay-gate Guide](/gate/guide) — end-to-end deployment
+- [Webhooks](/webhooks) — webhook delivery and signing
+- [Earn from AI Agents](/earn) — the catalog bounty program

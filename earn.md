@@ -5,7 +5,7 @@ description: "Put pay-gate in front of your API, set a price per call, and earn 
 
 # Earn from AI Agents
 
-You have an API. AI agents need it. Put [pay-gate](/docs/gate/) in front, set a price, and every agent that calls your endpoint pays you automatically.
+You have an API. AI agents need it. Put [pay-gate](/gate/) in front, set a price, and every agent that calls your endpoint pays you automatically.
 
 No signup. No API keys to manage. No invoicing. Agents pay per request in USDC on Base.
 
@@ -60,7 +60,7 @@ discovery:
 pay-gate start
 ```
 
-Your API now returns `402 Payment Required` for unpaid requests. Agents pay, you earn. You're automatically listed in [service discovery](/docs/api-reference#discovery) so every agent using Pay can find you.
+Your API now returns `402 Payment Required` for unpaid requests. Agents pay, you earn. You're automatically listed in [service discovery](/api-reference#discovery) so every agent using Pay can find you.
 
 Your existing API doesn't change. If you remove pay-gate, everything works exactly as before. No lock-in.
 
@@ -88,7 +88,7 @@ Instant disqualifiers: same response regardless of input, requires auth beyond p
 
 ### How to claim
 
-1. Set up your API with pay-gate (follow the [quickstart](/docs/gate/quickstart))
+1. Set up your API with pay-gate (follow the [quickstart](/gate/quickstart))
 2. Submit your API URL and wallet address on the bounty platform
 3. We verify your API meets the requirements
 4. $5 USDC sent to your wallet immediately on approval
@@ -132,7 +132,7 @@ When you enable `discoverable: true` in your gate config, your API is automatica
 
 ## Next Steps
 
-- [pay-gate Quickstart](/docs/gate/quickstart) — full setup guide
-- [pay-gate Configuration](/docs/gate/config) — all config options
-- [Provider Guide](/docs/provider-guide) — deep dive on payment flows
+- [pay-gate Quickstart](/gate/quickstart) — full setup guide
+- [pay-gate Configuration](/gate/config) — all config options
+- [Provider Guide](/provider-guide) — deep dive on payment flows
 - [Integration Examples](https://github.com/pay-skill/pay-examples) — 16 working patterns
