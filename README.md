@@ -16,17 +16,21 @@ npm run dev
 ```
 docs/
   index.md              -- landing page
-  architecture.md       -- system overview + component diagram
-  contracts.md          -- network addresses
-  integrations.md       -- framework integration guide
-  provider-guide.md     -- how providers earn
-  webhooks.md           -- event notifications
-  troubleshooting.md    -- common errors + debugging
+  api-design.md         -- API design principles
   api-reference.md      -- REST API reference
+  contracts.md          -- network addresses
+  earn.md               -- how providers earn
+  integrations.md       -- framework integration guide
+  provider-guide.md     -- provider onboarding
+  troubleshooting.md    -- common errors + debugging
+  webhooks.md           -- event notifications
   cli/                  -- CLI command reference
+  examples/             -- runnable example integrations
   gate/                 -- pay-gate docs (overview, quickstart, config, guide)
+  guides/               -- "Build with Pay" production guide
+  middleware/           -- per-framework middleware reference
+  quickstart/           -- scenario-specific quickstarts
   sdk/                  -- TypeScript + Python SDK reference
-  quickstart/           -- 8 scenario-specific quickstarts
   skills/               -- Claude Code skill references
 ```
 
